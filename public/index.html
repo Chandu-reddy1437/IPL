@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Predictor</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Brand Colors */
+            --mi: #004BA0;
+            --csk: #FDB913;
+            --srh: #FF822A;
+            --kkr: #3A225D;
+            --gt: #1C2841;
+            --lsg: #1C4A9E;
+            --rcb: #EC1C24;
+            --dc: #004C93;
+            --pbks: #ED1B24;
+            --rr: #254AA5;
+
+            /* Base Theme (Light) */
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --header-border: rgba(0, 0, 0, 0.05);
+
+            --status-open: #f59e0b;
+            --status-locked: #ef4444;
+            --status-bg-open: rgba(245, 158, 11, 0.1);
+            --status-bg-locked: rgba(239, 68, 68, 0.1);
+            --font-main: 'Outfit', sans-serif;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-hover: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --header-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: auto 1fr;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* HEADER */
+        header {
+            grid-column: 1 / -1;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background-color: var(--glass-bg);
+            border-bottom: 1px solid var(--header-border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .team-filters {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .team-filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .team-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            background-color: var(--bg-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .team-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .team-badge.active {
+            border-color: var(--primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-chip {
+            background-color: var(--bg-surface);
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 1.2rem;
+        }
+
+        /* SIDEBAR (Desktop) */
+        nav.sidebar {
+            grid-column: 1 / 2;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-surface-hover);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border-right: 3px solid var(--primary);
+        }
+
+        /* MAIN CONTENT */
+        main {
+            grid-column: 2 / -1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* CARDS & TABLES */
+        .card {
+            background-color: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .match-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .match-card {
+            background-color: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .match-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .status-chip {
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-chip.open {
+            background-color: var(--status-bg-open);
+            color: var(--status-open);
+        }
+
+        .status-chip.locked {
+            background-color: var(--status-bg-locked);
+            color: var(--status-locked);
+        }
+
+        .match-teams {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            text-align: center;
+            cursor: help;
+            position: relative;
+        }
+
+        .team-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .vs {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .team-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .countdown {
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-top: 8px;
+            color: var(--text-main);
+        }
+
+        .pick-action {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        select.pick-dropdown {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            background-color: var(--bg-body);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            outline: none;
+            font-family: var(--font-main);
+        }
+
+        button.btn-submit {
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            border: none;
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-family: var(--font-main);
+        }
+
+        button.btn-submit:hover {
+            background-color: #2563eb;
+        }
+
+        button.btn-submit:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* TOOLTIP */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background-color: var(--text-main);
+            color: var(--bg-surface);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 10;
+            font-weight: 500;
+        }
+
+        .team-info:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--text-main) transparent transparent transparent;
+        }
+
+        /* DATA TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--bg-surface-hover);
+        }
+
+        .you-chip {
+            background-color: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-card {
+            background-color: var(--bg-surface);
+            padding: 32px;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            margin-top: 0;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 16px;
+            outline: none;
+            font-family: var(--font-main);
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: var(--font-main);
+        }
+
+        .modal-btn:hover {
+            background-color: #2563eb;
+        }
+
+        /* BOTTOM NAV (Mobile) */
+        .bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            nav.sidebar {
+                display: none;
+            }
+
+            main {
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+
+            .header-left .logo-title {
+                font-size: 1rem;
+            }
+
+            .team-filters {
+                display: none;
+            }
+
+            .bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: var(--bg-surface);
+                border-top: 1px solid var(--border);
+                z-index: 50;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            .bottom-nav-item {
+                flex: 1;
+                padding: 12px 0;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.75rem;
+                font-weight: 500;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .bottom-nav-item.active {
+                color: var(--primary);
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+
+        /* Utilities */
+        .text-green {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .text-red {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .text-gray {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <div class="logo-title">IPL Predictor</div>
+            <div class="team-filters" id="teamFilters">
+                <button class="team-badge active" data-team="All">All</button>
+                <button class="team-badge" data-team="MI" style="color: var(--mi); border-color:var(--mi);">MI</button>
+                <button class="team-badge" data-team="CSK"
+                    style="color: var(--csk); border-color:var(--csk);">CSK</button>
+                <button class="team-badge" data-team="KKR"
+                    style="color: var(--kkr); border-color:var(--kkr);">KKR</button>
+                <button class="team-badge" data-team="SRH"
+                    style="color: var(--srh); border-color:var(--srh);">SRH</button>
+                <button class="team-badge" data-team="RCB"
+                    style="color: var(--rcb); border-color:var(--rcb);">RCB</button>
+                <button class="team-badge" data-team="GT" style="color: var(--gt); border-color:var(--gt);">GT</button>
+                <button class="team-badge" data-team="RR" style="color: var(--rr); border-color:var(--rr);">RR</button>
+                <button class="team-badge" data-team="DC" style="color: var(--dc); border-color:var(--dc);">DC</button>
+                <button class="team-badge" data-team="PBKS"
+                    style="color: var(--pbks); border-color:var(--pbks);">PBKS</button>
+                <button class="team-badge" data-team="LSG"
+                    style="color: var(--lsg); border-color:var(--lsg);">LSG</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="user-chip" id="userChip" onclick="promptLogin()">Guest</div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">☀️</button>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <div class="nav-item active" onclick="switchView('upcoming')">Upcoming Matches</div>
+        <div class="nav-item" onclick="switchView('leaderboard')">Leaderboard</div>
+        <div class="nav-item" onclick="switchView('results')">My Results</div>
+    </nav>
+
+    <main>
+        <!-- UPCOMING MATCHES VIEW -->
+        <div id="view-upcoming" class="view-section active">
+            <h2 style="margin-bottom: 24px;">Matches</h2>
+            <div class="match-grid" id="upcomingMatchesContainer">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- LEADERBOARD VIEW -->
+        <div id="view-leaderboard" class="view-section">
+            <h2 style="margin-bottom: 24px;">Leaderboard</h2>
+            <div class="card" style="padding: 0; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Correct</th>
+                            <th>Total</th>
+                            <th>Score %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MY RESULTS VIEW -->
+        <div id="view-results" class="view-section">
+            <h2 style="margin-bottom: 24px;">My Performance</h2>
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <div class="stat-value" id="resCorrect">0</div>
+                    <div class="stat-label">Correct Picks</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="resWrong" style="color: var(--status-locked);">0</div>
+                    <div class="stat-label">Wrong Picks</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="resAcc" style="color: #10b981;">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+            <div class="card" style="padding: 0; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fixture</th>
+                            <th>Your Pick</th>
+                            <th>Status / Winner</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <div class="bottom-nav-item active" onclick="switchView('upcoming')">Matches</div>
+        <div class="bottom-nav-item" onclick="switchView('leaderboard')">Leaderboard</div>
+        <div class="bottom-nav-item" onclick="switchView('results')">Results</div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-card">
+            <h2 class="modal-title">Welcome to IPL Predictor</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Enter your name to start predicting matches.</p>
+            <input type="text" id="loginInput" class="modal-input" placeholder="Your Name"
+                onkeydown="if(event.key==='Enter') saveName()">
+            <button class="modal-btn" onclick="saveName()">Let's Go</button>
+        </div>
+    </div>
+
+    <script>
+        // GLOBALS
+        let currentUser = localStorage.getItem('ipl_username') || null;
+        let scheduleData = [];
+        let myPicks = [];
+        let h2hData = {};
+        let activeFilter = 'All';
+
+        const TEAM_ABBR = {
+            'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
+            'Sunrisers Hyderabad': 'SRH', 'Royal Challengers Bangalore': 'RCB', 'Gujarat Titans': 'GT',
+            'Rajasthan Royals': 'RR', 'Delhi Capitals': 'DC', 'Punjab Kings': 'PBKS', 'Lucknow Super Giants': 'LSG'
+        };
+
+        // INIT
+        async function init() {
+            initTheme();
+            if (!currentUser) promptLogin();
+            else document.getElementById('userChip').textContent = currentUser;
+
+            await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
+            renderUpcomingMatches();
+            setupTeamFilter();
+            setInterval(updateCountdowns, 1000);
+
+            // Auto refresh results every 60s
+            setInterval(() => {
+                fetchSchedule().then(renderUpcomingMatches);
+                if (currentUser) fetchMyPicks();
+            }, 60000);
+        }
+
+        // THEME
+        function initTheme() {
+            const saved = localStorage.getItem('ipl_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('themeToggle').textContent = saved === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('ipl_theme', target);
+            document.getElementById('themeToggle').textContent = target === 'dark' ? '☀️' : '🌙';
+        }
+
+        // NAVIGATION
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+
+            const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            document.querySelectorAll('.bottom-nav-item')[idx].classList.add('active');
+
+            if (viewName === 'leaderboard') fetchLeaderboard();
+            if (viewName === 'results') renderMyResults();
+        }
+
+        function setupTeamFilter() {
+            document.querySelectorAll('.team-badge').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.team-badge').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    activeFilter = e.target.dataset.team;
+                    renderUpcomingMatches();
+                });
+            });
+        }
+
+        // LOGIN
+        function promptLogin() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('loginInput').value = currentUser || '';
+            document.getElementById('loginInput').focus();
+        }
+
+        async function saveName() {
+            const name = document.getElementById('loginInput').value.trim();
+            if (!name) return;
+            currentUser = name;
+            localStorage.setItem('ipl_username', name);
+            document.getElementById('userChip').textContent = name;
+            document.getElementById('loginModal').classList.remove('active');
+            await fetchMyPicks();
+            renderUpcomingMatches();
+            if (document.getElementById('view-results').classList.contains('active')) renderMyResults();
+        }
+
+        // API FETCH
+        async function fetchSchedule() {
+            try {
+                const res = await fetch('/api/schedule');
+                const data = await res.json();
+                scheduleData = data.matches || [];
+            } catch (e) { console.error('Error fetching schedule', e); }
+        }
+
+        async function fetchMyPicks() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`/api/picks/${encodeURIComponent(currentUser)}`);
+                myPicks = await res.json();
+            } catch (e) { console.error('Error fetching picks', e); }
+        }
+
+        async function fetchH2H() {
+            try {
+                const res = await fetch('/api/h2h');
+                const data = await res.json();
+                h2hData = data.records || {};
+            } catch (e) { console.error('Error fetching H2H', e); }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch('/api/leaderboard');
+                const data = await res.json();
+                const tbody = document.getElementById('leaderboardBody');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color:var(--text-muted);">No predictions found yet.</td></tr>';
+                    return;
+                }
+
+                data.forEach(user => {
+                    const isMe = user.name === currentUser;
+                    tbody.innerHTML += `
+                        <tr style="${isMe ? 'background-color: var(--bg-surface-hover);' : ''}">
+                            <td>#${user.rank}</td>
+                            <td style="font-weight:600;">${user.name} ${isMe ? '<span class="you-chip">YOU</span>' : ''}</td>
+                            <td class="text-green">${user.correct}</td>
+                            <td>${user.total}</td>
+                            <td style="font-weight:700;">${user.scorePct}%</td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { console.error('Error fetching leaderboard', e); }
+        }
+
+        function getH2HString(tA, tB) {
+            if (!h2hData[tA] || !h2hData[tA][tB]) return 'No data';
+            const record = h2hData[tA][tB];
+            return `${tA} ${record.home} - ${record.away} ${tB}`;
+        }
+
+        // RENDER UPCOMING
+        function renderUpcomingMatches() {
+            const container = document.getElementById('upcomingMatchesContainer');
+            container.innerHTML = '';
+
+            const now = Date.now();
+            const futureMatches = scheduleData.filter(m => m.winner === null);
+
+            const filtered = activeFilter === 'All'
+                ? futureMatches
+                : futureMatches.filter(m => TEAM_ABBR[m.teamA] === activeFilter || TEAM_ABBR[m.teamB] === activeFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 48px; color:var(--text-muted); background:var(--bg-surface); border-radius:var(--radius-lg);">No matches found.</div>`;
+                return;
+            }
+
+            filtered.forEach(m => {
+                const matchTime = new Date(m.startTimeISO).getTime();
+                const isLocked = now >= matchTime - 30 * 60 * 1000;
+
+                const existingPick = myPicks.find(p => p.matchId === m.id);
+                const pickValue = existingPick ? existingPick.team : '';
+
+                const abbrA = TEAM_ABBR[m.teamA] || m.teamA;
+                const abbrB = TEAM_ABBR[m.teamB] || m.teamB;
+
+                const h2hTooltip = getH2HString(m.teamA, m.teamB);
+
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <div class="match-header">
+                        <div>${m.dateLabel} • ${m.venue}</div>
+                        <div class="status-chip ${isLocked ? 'locked' : 'open'}">${isLocked ? '🔒 Locked' : 'Open'}</div>
+                    </div>
+                    <div class="match-teams">
+                        <div class="team-info">
+                            <div class="team-logo"><img src="/images_final/${abbrA}.png" alt="${abbrA}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
+                            <div class="team-name">${abbrA}</div>
+                            <div class="tooltip">${h2hTooltip}</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team-info">
+                            <div class="team-logo"><img src="/images_final/${abbrB}.png" alt="${abbrB}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
+                            <div class="team-name">${abbrB}</div>
+                            <div class="tooltip">${h2hTooltip}</div>
+                        </div>
+                    </div>
+                    <div class="countdown" data-time="${m.startTimeISO}">...</div>
+                    <div class="pick-action">
+                        <select class="pick-dropdown" id="pick-${m.id}" ${isLocked ? 'disabled' : ''}>
+                            <option value="">Select winner...</option>
+                            <option value="${m.teamA}" ${pickValue === m.teamA ? 'selected' : ''}>${m.teamA}</option>
+                            <option value="${m.teamB}" ${pickValue === m.teamB ? 'selected' : ''}>${m.teamB}</option>
+                        </select>
+                        <button class="btn-submit" onclick="submitPick('${m.id}')" ${isLocked ? 'disabled' : ''}>
+                            ${existingPick ? 'Update' : 'Submit'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            updateCountdowns();
+        }
+
+        async function submitPick(matchId) {
+            if (!currentUser) return promptLogin();
+
+            const team = document.getElementById(`pick-${matchId}`).value;
+            if (!team) return alert('Please select a team to predict.');
+
+            const btn = document.querySelector(`#pick-${matchId}`).nextElementSibling;
+            btn.textContent = '...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/picks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userName: currentUser, matchId, team })
+                });
+
+                if (res.ok) {
+                    await fetchMyPicks();
+                    const existingPick = myPicks.find(p => p.matchId === matchId);
+                    btn.textContent = 'Update';
+                    btn.disabled = false;
+                    // Provide a nice visual feedback (green button briefly)
+                    btn.style.backgroundColor = '#10b981';
+                    setTimeout(() => btn.style.backgroundColor = '', 1000);
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to submit pick.');
+                    btn.textContent = 'Submit';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network error.');
+                btn.textContent = 'Submit';
+                btn.disabled = false;
+            }
+        }
+
+        function updateCountdowns() {
+            const now = Date.now();
+            document.querySelectorAll('.countdown').forEach(el => {
+                const matchTime = new Date(el.dataset.time).getTime();
+                const cutoff = matchTime - (30 * 60 * 1000);
+
+                const diff = cutoff - now;
+                if (diff <= 0) {
+                    el.textContent = "00:00:00";
+                    // Change status if it's strictly now locked 
+                    // This relies on re-render to update the dropdowns if it just ticked over, 
+                    // but visual countdown stops at 0.
+                    return;
+                }
+
+                // Format diff
+                const totalMins = Math.floor(diff / 60000);
+                if (totalMins > 24 * 60) {
+                    const days = Math.floor(totalMins / (24 * 60));
+                    const hours = Math.floor((totalMins % (24 * 60)) / 60);
+                    el.textContent = `${days}d ${hours}h`;
+                } else {
+                    const h = Math.floor(totalMins / 60).toString().padStart(2, '0');
+                    const m = (totalMins % 60).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    el.textContent = `${h}:${m}:${s}`;
+                }
+            });
+        }
+
+        // RENDER RESULTS
+        function renderMyResults() {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+
+            if (!currentUser) return;
+
+            const pastMatches = scheduleData.filter(m => m.winner !== null || new Date(m.startTimeISO).getTime() - 30 * 60 * 1000 <= Date.now());
+
+            let correct = 0, wrong = 0, total = 0;
+
+            const rows = pastMatches.map(m => {
+                const myPick = myPicks.find(p => p.matchId === m.id);
+                const pickText = myPick ? myPick.team : '-';
+
+                let statusMsg = '<span class="text-gray">Pending</span>';
+                if (m.winner !== null) {
+                    if (myPick) total++;
+
+                    if (myPick && myPick.team === m.winner) {
+                        correct++;
+                        statusMsg = `<span class="text-green">Correct ✓ (${m.winner})</span>`;
+                    } else if (myPick && myPick.team !== m.winner) {
+                        wrong++;
+                        statusMsg = `<span class="text-red">Wrong ✗ (${m.winner})</span>`;
+                    } else {
+                        statusMsg = `<span>Winner: ${m.winner}</span>`;
+                    }
+                }
+
+                return `
+                    <tr>
+                        <td style="white-space:nowrap; font-size: 0.85rem; color:var(--text-muted);">${m.dateLabel}</td>
+                        <td style="font-weight:500;">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
+                        <td style="font-weight:600;">${TEAM_ABBR[pickText] || pickText}</td>
+                        <td>${statusMsg}</td>
+                    </tr>
+                `;
+            });
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 24px; color:var(--text-muted);">No recorded past matches.</td></tr>';
+            } else {
+                tbody.innerHTML = rows.reverse().join('');
+            }
+
+            document.getElementById('resCorrect').textContent = correct;
+            document.getElementById('resWrong').textContent = wrong;
+            const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+            document.getElementById('resAcc').textContent = acc + '%';
+        }
+
+        // Start
+        window.onload = init;
+    </script>
+</body>
+
+</html>

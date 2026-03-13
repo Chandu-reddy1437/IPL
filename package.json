@@ -1,0 +1,14 @@
+{
+  "name": "ipl-predictor",
+  "version": "1.0.0",
+  "description": "IPL Predictor",
+  "main": "server-simple.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server-simple.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
