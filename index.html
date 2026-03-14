@@ -445,6 +445,125 @@
             border-color: var(--text-main) transparent transparent transparent;
         }
 
+        /* H2H DETAILS MODAL */
+        .h2h-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .h2h-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .h2h-modal {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        .h2h-modal-overlay.active .h2h-modal {
+            transform: translateY(0);
+        }
+        .h2h-modal-title {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .h2h-teams-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .h2h-team-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .h2h-team-col img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+        .h2h-team-col .h2h-team-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .h2h-score-big {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .h2h-stat-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px 16px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .h2h-stat-grid .label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .h2h-stat-grid .val {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .h2h-stat-grid .val-left { text-align: right; }
+        .h2h-stat-grid .val-right { text-align: left; }
+        .h2h-stat-grid .divider {
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+        .h2h-total-row {
+            text-align: center;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .h2h-total-row strong {
+            color: var(--text-main);
+            font-size: 1.1rem;
+        }
+        .h2h-close-btn {
+            display: block;
+            margin: 18px auto 0;
+            padding: 10px 32px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-main);
+        }
+        .h2h-close-btn:hover {
+            background-color: #2563eb;
+        }
+
         /* DATA TABLE */
         table {
             width: 100%;
@@ -797,6 +916,46 @@
         </div>
     </div>
 
+    <!-- H2H Details Modal -->
+    <div class="h2h-modal-overlay" id="h2hModal" onclick="if(event.target===this) closeH2HModal()">
+        <div class="h2h-modal">
+            <div class="h2h-modal-title" id="h2hModalTitle">Head to Head</div>
+            <div class="h2h-teams-row">
+                <div class="h2h-team-col">
+                    <img id="h2hImgA" src="" alt="">
+                    <div class="h2h-team-name" id="h2hNameA"></div>
+                </div>
+                <div class="h2h-score-big" id="h2hScoreBig"></div>
+                <div class="h2h-team-col">
+                    <img id="h2hImgB" src="" alt="">
+                    <div class="h2h-team-name" id="h2hNameB"></div>
+                </div>
+            </div>
+            <div class="h2h-stat-grid">
+                <div class="label">Home Wins</div>
+                <div></div>
+                <div class="label">Home Wins</div>
+                <div class="val val-left" id="h2hHomeA">0</div>
+                <div class="divider">|</div>
+                <div class="val val-right" id="h2hHomeB">0</div>
+                <div class="label">Away Wins</div>
+                <div></div>
+                <div class="label">Away Wins</div>
+                <div class="val val-left" id="h2hAwayA">0</div>
+                <div class="divider">|</div>
+                <div class="val val-right" id="h2hAwayB">0</div>
+                <div class="label">Total Wins</div>
+                <div></div>
+                <div class="label">Total Wins</div>
+                <div class="val val-left" id="h2hTotalA" style="color: var(--primary);">0</div>
+                <div class="divider">|</div>
+                <div class="val val-right" id="h2hTotalB" style="color: var(--primary);">0</div>
+            </div>
+            <div class="h2h-total-row" id="h2hTotalMatches"></div>
+            <button class="h2h-close-btn" onclick="closeH2HModal()">Close</button>
+        </div>
+    </div>
+
     <script>
         // GLOBALS
         let currentUser = localStorage.getItem('ipl_username') || null;
@@ -1025,6 +1184,48 @@
             return `${abbrA} ${winsA} - ${winsB} ${abbrB}`;
         }
 
+        function showH2HModal(teamA, teamB) {
+            const abbrA = TEAM_ABBR[teamA] || teamA;
+            const abbrB = TEAM_ABBR[teamB] || teamB;
+
+            // Team A stats
+            const aVsB = (h2hData[teamA] && h2hData[teamA][teamB]) ? h2hData[teamA][teamB] : { home: 0, away: 0 };
+            // Team B stats  
+            const bVsA = (h2hData[teamB] && h2hData[teamB][teamA]) ? h2hData[teamB][teamA] : { home: 0, away: 0 };
+
+            const homeA = aVsB.home || 0;
+            const awayA = aVsB.away || 0;
+            const totalA = homeA + awayA;
+
+            const homeB = bVsA.home || 0;
+            const awayB = bVsA.away || 0;
+            const totalB = homeB + awayB;
+
+            const totalMatches = totalA + totalB;
+
+            document.getElementById('h2hModalTitle').textContent = `${abbrA} vs ${abbrB} — Head to Head`;
+            document.getElementById('h2hImgA').src = `/images_final/${abbrA}.png`;
+            document.getElementById('h2hImgA').alt = abbrA;
+            document.getElementById('h2hImgB').src = `/images_final/${abbrB}.png`;
+            document.getElementById('h2hImgB').alt = abbrB;
+            document.getElementById('h2hNameA').textContent = abbrA;
+            document.getElementById('h2hNameB').textContent = abbrB;
+            document.getElementById('h2hScoreBig').textContent = `${totalA} - ${totalB}`;
+            document.getElementById('h2hHomeA').textContent = homeA;
+            document.getElementById('h2hHomeB').textContent = homeB;
+            document.getElementById('h2hAwayA').textContent = awayA;
+            document.getElementById('h2hAwayB').textContent = awayB;
+            document.getElementById('h2hTotalA').textContent = totalA;
+            document.getElementById('h2hTotalB').textContent = totalB;
+            document.getElementById('h2hTotalMatches').innerHTML = `Total Matches Played: <strong>${totalMatches}</strong>`;
+
+            document.getElementById('h2hModal').classList.add('active');
+        }
+
+        function closeH2HModal() {
+            document.getElementById('h2hModal').classList.remove('active');
+        }
+
         // RENDER UPCOMING
         function renderUpcomingMatches() {
             const container = document.getElementById('upcomingMatchesContainer');
@@ -1062,13 +1263,13 @@
                         <div class="status-chip ${isLocked ? 'locked' : 'open'}">${isLocked ? '🔒 Locked' : 'Open'}</div>
                     </div>
                     <div class="match-teams">
-                        <div class="team-info">
+                        <div class="team-info" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                             <div class="team-logo"><img src="/images_final/${abbrA}.png" alt="${abbrA}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
                             <div class="team-name">${abbrA}</div>
                             <div class="tooltip">${h2hTooltip}</div>
                         </div>
                         <div class="vs">VS</div>
-                        <div class="team-info">
+                        <div class="team-info" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                             <div class="team-logo"><img src="/images_final/${abbrB}.png" alt="${abbrB}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
                             <div class="team-name">${abbrB}</div>
                             <div class="tooltip">${h2hTooltip}</div>
