@@ -1,4 +1,385 @@
 {
-    "lastUpdated": "",
-    "records": {}
+  "lastUpdated": "2026-03-14T13:18:58.837568Z",
+  "records": {
+    "Mumbai Indians": {
+      "Chennai Super Kings": {
+        "home": 1,
+        "away": 1
+      },
+      "Kolkata Knight Riders": {
+        "home": 2,
+        "away": 0
+      },
+      "Sunrisers Hyderabad": {
+        "home": 3,
+        "away": 2
+      },
+      "Royal Challengers Bangalore": {
+        "home": 2,
+        "away": 0
+      },
+      "Gujarat Titans": {
+        "home": 1,
+        "away": 2
+      },
+      "Rajasthan Royals": {
+        "home": 1,
+        "away": 2
+      },
+      "Delhi Capitals": {
+        "home": 3,
+        "away": 2
+      },
+      "Punjab Kings": {
+        "home": 0,
+        "away": 2
+      },
+      "Lucknow Super Giants": {
+        "home": 1,
+        "away": 1
+      }
+    },
+    "Chennai Super Kings": {
+      "Mumbai Indians": {
+        "home": 2,
+        "away": 3
+      },
+      "Kolkata Knight Riders": {
+        "home": 1,
+        "away": 2
+      },
+      "Sunrisers Hyderabad": {
+        "home": 2,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 2,
+        "away": 1
+      },
+      "Gujarat Titans": {
+        "home": 2,
+        "away": 2
+      },
+      "Rajasthan Royals": {
+        "home": 1,
+        "away": 0
+      },
+      "Delhi Capitals": {
+        "home": 2,
+        "away": 1
+      },
+      "Punjab Kings": {
+        "home": 0,
+        "away": 1
+      },
+      "Lucknow Super Giants": {
+        "home": 1,
+        "away": 1
+      }
+    },
+    "Kolkata Knight Riders": {
+      "Mumbai Indians": {
+        "home": 2,
+        "away": 2
+      },
+      "Chennai Super Kings": {
+        "home": 0,
+        "away": 3
+      },
+      "Sunrisers Hyderabad": {
+        "home": 5,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 2,
+        "away": 2
+      },
+      "Gujarat Titans": {
+        "home": 0,
+        "away": 1
+      },
+      "Rajasthan Royals": {
+        "home": 2,
+        "away": 1
+      },
+      "Delhi Capitals": {
+        "home": 1,
+        "away": 2
+      },
+      "Punjab Kings": {
+        "home": 2,
+        "away": 0
+      },
+      "Lucknow Super Giants": {
+        "home": 1,
+        "away": 1
+      }
+    },
+    "Sunrisers Hyderabad": {
+      "Mumbai Indians": {
+        "home": 1,
+        "away": 1
+      },
+      "Chennai Super Kings": {
+        "home": 1,
+        "away": 2
+      },
+      "Kolkata Knight Riders": {
+        "home": 2,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 0,
+        "away": 3
+      },
+      "Gujarat Titans": {
+        "home": 1,
+        "away": 0
+      },
+      "Rajasthan Royals": {
+        "home": 3,
+        "away": 1
+      },
+      "Delhi Capitals": {
+        "home": 0,
+        "away": 2
+      },
+      "Punjab Kings": {
+        "home": 3,
+        "away": 2
+      },
+      "Lucknow Super Giants": {
+        "home": 1,
+        "away": 1
+      }
+    },
+    "Royal Challengers Bangalore": {
+      "Mumbai Indians": {
+        "home": 2,
+        "away": 1
+      },
+      "Chennai Super Kings": {
+        "home": 3,
+        "away": 1
+      },
+      "Kolkata Knight Riders": {
+        "home": 1,
+        "away": 1
+      },
+      "Sunrisers Hyderabad": {
+        "home": 0,
+        "away": 3
+      },
+      "Gujarat Titans": {
+        "home": 2,
+        "away": 1
+      },
+      "Rajasthan Royals": {
+        "home": 2,
+        "away": 3
+      },
+      "Delhi Capitals": {
+        "home": 2,
+        "away": 2
+      },
+      "Punjab Kings": {
+        "home": 2,
+        "away": 4
+      },
+      "Lucknow Super Giants": {
+        "home": 0,
+        "away": 4
+      }
+    },
+    "Gujarat Titans": {
+      "Mumbai Indians": {
+        "home": 4,
+        "away": 1
+      },
+      "Chennai Super Kings": {
+        "home": 3,
+        "away": 1
+      },
+      "Kolkata Knight Riders": {
+        "home": 0,
+        "away": 3
+      },
+      "Sunrisers Hyderabad": {
+        "home": 4,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 1,
+        "away": 2
+      },
+      "Rajasthan Royals": {
+        "home": 3,
+        "away": 3
+      },
+      "Delhi Capitals": {
+        "home": 2,
+        "away": 2
+      },
+      "Punjab Kings": {
+        "home": 0,
+        "away": 3
+      },
+      "Lucknow Super Giants": {
+        "home": 2,
+        "away": 2
+      }
+    },
+    "Rajasthan Royals": {
+      "Mumbai Indians": {
+        "home": 1,
+        "away": 2
+      },
+      "Chennai Super Kings": {
+        "home": 3,
+        "away": 2
+      },
+      "Kolkata Knight Riders": {
+        "home": 1,
+        "away": 2
+      },
+      "Sunrisers Hyderabad": {
+        "home": 0,
+        "away": 2
+      },
+      "Royal Challengers Bangalore": {
+        "home": 3,
+        "away": 1
+      },
+      "Gujarat Titans": {
+        "home": 1,
+        "away": 1
+      },
+      "Delhi Capitals": {
+        "home": 2,
+        "away": 1
+      },
+      "Punjab Kings": {
+        "home": 0,
+        "away": 4
+      },
+      "Lucknow Super Giants": {
+        "home": 2,
+        "away": 2
+      }
+    },
+    "Delhi Capitals": {
+      "Mumbai Indians": {
+        "home": 2,
+        "away": 0
+      },
+      "Chennai Super Kings": {
+        "home": 1,
+        "away": 1
+      },
+      "Kolkata Knight Riders": {
+        "home": 2,
+        "away": 1
+      },
+      "Sunrisers Hyderabad": {
+        "home": 2,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 1,
+        "away": 1
+      },
+      "Gujarat Titans": {
+        "home": 1,
+        "away": 2
+      },
+      "Rajasthan Royals": {
+        "home": 2,
+        "away": 1
+      },
+      "Punjab Kings": {
+        "home": 1,
+        "away": 3
+      },
+      "Lucknow Super Giants": {
+        "home": 2,
+        "away": 2
+      }
+    },
+    "Punjab Kings": {
+      "Mumbai Indians": {
+        "home": 2,
+        "away": 2
+      },
+      "Chennai Super Kings": {
+        "home": 2,
+        "away": 4
+      },
+      "Kolkata Knight Riders": {
+        "home": 2,
+        "away": 1
+      },
+      "Sunrisers Hyderabad": {
+        "home": 0,
+        "away": 1
+      },
+      "Royal Challengers Bangalore": {
+        "home": 1,
+        "away": 2
+      },
+      "Gujarat Titans": {
+        "home": 0,
+        "away": 3
+      },
+      "Rajasthan Royals": {
+        "home": 0,
+        "away": 3
+      },
+      "Delhi Capitals": {
+        "home": 1,
+        "away": 1
+      },
+      "Lucknow Super Giants": {
+        "home": 1,
+        "away": 2
+      }
+    },
+    "Lucknow Super Giants": {
+      "Mumbai Indians": {
+        "home": 4,
+        "away": 2
+      },
+      "Chennai Super Kings": {
+        "home": 2,
+        "away": 1
+      },
+      "Kolkata Knight Riders": {
+        "home": 1,
+        "away": 3
+      },
+      "Sunrisers Hyderabad": {
+        "home": 1,
+        "away": 3
+      },
+      "Royal Challengers Bangalore": {
+        "home": 0,
+        "away": 2
+      },
+      "Gujarat Titans": {
+        "home": 2,
+        "away": 1
+      },
+      "Rajasthan Royals": {
+        "home": 0,
+        "away": 2
+      },
+      "Delhi Capitals": {
+        "home": 2,
+        "away": 1
+      },
+      "Punjab Kings": {
+        "home": 1,
+        "away": 2
+      }
+    }
+  }
 }
