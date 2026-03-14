@@ -97,26 +97,61 @@
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--glass-border);
     }
-    /* ═══ ENHANCED SELECTED GLOW ═══ */
+    /* ═══ ENHANCED SELECTED GLOW (Vibrant Indigo) ═══ */
     .selected-glow {
-      box-shadow: 0 0 20px 6px rgba(249, 115, 22, 0.5), 0 0 40px 12px rgba(249, 115, 22, 0.2), inset 0 0 8px rgba(249, 115, 22, 0.15);
-      border-color: #F97316 !important;
+      box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5), 0 0 40px 12px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(99, 102, 241, 0.15);
+      border-color: #6366F1 !important;
       border-width: 3px !important;
       animation: pulse-glow 2s ease-in-out infinite;
     }
     @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px 6px rgba(249, 115, 22, 0.5), 0 0 40px 12px rgba(249, 115, 22, 0.2); }
-      50% { box-shadow: 0 0 28px 10px rgba(249, 115, 22, 0.6), 0 0 50px 16px rgba(249, 115, 22, 0.3); }
+      0%, 100% { box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5), 0 0 40px 12px rgba(99, 102, 241, 0.2); }
+      50% { box-shadow: 0 0 28px 10px rgba(99, 102, 241, 0.6), 0 0 50px 16px rgba(99, 102, 241, 0.3); }
     }
     .selected-check {
       position: absolute; bottom: -4px; right: -4px;
       width: 20px; height: 20px;
-      background: #F97316; border-radius: 50%;
+      background: #6366F1; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 6px rgba(249, 115, 22, 0.5);
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.5);
       z-index: 5;
     }
     .selected-check svg { width: 12px; height: 12px; color: white; }
+
+    /* Team Filter Logo Styles */
+    .team-filter-item {
+      position: relative;
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .team-filter-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+      transform: scale(1.05);
+    }
+    .team-filter-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .team-filter-all {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .team-filter-item.active .team-filter-all {
+      color: var(--accent);
+    }
 
     .stats-tooltip {
       visibility: hidden; opacity: 0;
@@ -230,19 +265,21 @@
         <section class="px-5 pt-6 pb-2">
             <h2 class="text-2xl font-bold mb-1">Upcoming Matches</h2>
             <p class="text-brand-text text-sm mb-5">Predict and climb the leaderboard.</p>
-            <!-- Team Filter Pills -->
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 pb-2" id="teamFilters">
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-accent text-brand-darker font-bold text-xs active" data-team="All">All Teams</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="MI">MI</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="CSK">CSK</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="RCB">RCB</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="KKR">KKR</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="SRH">SRH</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="RR">RR</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="GT">GT</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="DC">DC</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="PBS">PBKS</button>
-                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-brand-overlay text-brand-text text-xs hover:text-brand-primary transition-colors" data-team="LSG">LSG</button>
+            <!-- Team Filter Circular Logos -->
+            <div class="flex items-center gap-4 overflow-x-auto no-scrollbar -mx-5 px-5 pb-4" id="teamFilters">
+                <button class="team-filter-item active" data-team="All">
+                    <span class="team-filter-all">All</span>
+                </button>
+                <button class="team-filter-item" data-team="MI"><img alt="MI" src="./images_final/MI.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>MI</span>';"/></button>
+                <button class="team-filter-item" data-team="CSK"><img alt="CSK" src="./images_final/CSK.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>CSK</span>';"/></button>
+                <button class="team-filter-item" data-team="RCB"><img alt="RCB" src="./images_final/RCB.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RCB</span>';"/></button>
+                <button class="team-filter-item" data-team="KKR"><img alt="KKR" src="./images_final/KKR.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>KKR</span>';"/></button>
+                <button class="team-filter-item" data-team="SRH"><img alt="SRH" src="./images_final/SRH.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>SRH</span>';"/></button>
+                <button class="team-filter-item" data-team="RR"><img alt="RR" src="./images_final/RR.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RR</span>';"/></button>
+                <button class="team-filter-item" data-team="GT"><img alt="GT" src="./images_final/GT.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>GT</span>';"/></button>
+                <button class="team-filter-item" data-team="DC"><img alt="DC" src="./images_final/DC.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>DC</span>';"/></button>
+                <button class="team-filter-item" data-team="PBKS"><img alt="PBKS" src="./images_final/PBKS.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>PBKS</span>';"/></button>
+                <button class="team-filter-item" data-team="LSG"><img alt="LSG" src="./images_final/LSG.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>LSG</span>';"/></button>
             </div>
         </section>
         <div class="px-5 space-y-5" id="upcomingMatchesContainer">
@@ -489,14 +526,12 @@
         if (viewName === 'results') renderMyResults();
     }
 
-    function setupTeamFilter() {
-        document.querySelectorAll('.team-badge').forEach(btn => {
+    function setupFilters() {
+        document.querySelectorAll('.team-filter-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.team-badge').forEach(b => {
-                    b.classList.remove('bg-brand-accent', 'text-brand-darker', 'font-bold', 'active');
-                    b.classList.add('bg-brand-muted', 'border', 'border-brand-overlay', 'text-brand-text');
+                document.querySelectorAll('.team-filter-item').forEach(b => {
+                    b.classList.remove('active');
                 });
-                e.currentTarget.classList.remove('bg-brand-muted', 'border-brand-overlay', 'text-brand-text');
                 e.currentTarget.classList.add('bg-brand-accent', 'text-brand-darker', 'font-bold', 'active');
                 activeFilter = e.currentTarget.dataset.team;
                 renderUpcomingMatches();
@@ -649,50 +684,50 @@
             const checkB = pickValue === m.teamB ? '<div class="selected-check"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>' : '';
 
             const card = document.createElement('article');
-            card.className = 'themed-card rounded-2xl p-5 shadow-xl transition-transform active:scale-[0.98]';
+            card.className = 'themed-card rounded-2xl p-5 shadow-xl transition-transform active:scale-[0.99]';
             card.innerHTML = `
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-6">
                     <span class="text-[10px] uppercase tracking-widest text-brand-accent font-bold">${m.dateLabel}</span>
-                    <span class="text-[10px] themed-chip px-2.5 py-1 rounded">${m.venue}</span>
+                    <span class="text-[10px] themed-chip px-2.5 py-1 rounded-md font-medium">${m.venue}</span>
                 </div>
-                <div class="flex items-center justify-between mb-5 relative">
-                    <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                <div class="flex items-center justify-between mb-8 relative">
+                    <div class="flex flex-col items-center gap-3 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                         <div class="relative">
-                            <div class="w-16 h-16 ${bgA} rounded-full flex items-center justify-center p-2 border-2 ${colorA} ${glowA}">
+                            <div class="w-20 h-20 ${bgA} rounded-full flex items-center justify-center p-3 border-2 ${colorA} ${glowA} transition-all duration-300">
                                 <img alt="${abbrA}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrA}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}';">
                             </div>
                             ${checkA}
-                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-1 shadow-lg z-10">
                                 <span class="material-symbols-outlined text-[14px] themed-text">info</span>
                             </div>
-                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-36 themed-tooltip border border-brand-overlay rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
-                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
-                                <p class="text-[11px] font-bold text-brand-primary">${h2hTooltip}</p>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-40 themed-tooltip border border-brand-overlay rounded-lg py-2.5 px-3 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1 font-bold">Head to Head</p>
+                                <p class="text-[12px] font-bold text-brand-primary">${h2hTooltip}</p>
                                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
                             </div>
                         </div>
-                        <span class="font-bold text-sm text-brand-primary">${abbrA}</span>
+                        <span class="font-extrabold text-sm tracking-tight text-brand-primary">${abbrA}</span>
                     </div>
                     <div class="flex flex-col items-center">
-                        <span class="text-xl font-black italic opacity-20">VS</span>
-                        <div class="countdown text-[10px] text-brand-accent font-mono mt-1" data-time="${m.startTimeISO}">...</div>
+                        <span class="text-2xl font-black italic opacity-10">VS</span>
+                        <div class="countdown text-[11px] text-brand-accent font-mono mt-1 font-bold" data-time="${m.startTimeISO}">...</div>
                     </div>
-                    <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                    <div class="flex flex-col items-center gap-3 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                         <div class="relative">
-                            <div class="w-16 h-16 ${bgB} rounded-full flex items-center justify-center p-2 border-2 ${colorB} ${glowB}">
+                            <div class="w-20 h-20 ${bgB} rounded-full flex items-center justify-center p-3 border-2 ${colorB} ${glowB} transition-all duration-300">
                                 <img alt="${abbrB}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrB}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}';">
                             </div>
                             ${checkB}
-                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-1 shadow-lg z-10">
                                 <span class="material-symbols-outlined text-[14px] themed-text">info</span>
                             </div>
-                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-36 themed-tooltip border border-brand-overlay rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
-                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
-                                <p class="text-[11px] font-bold text-brand-primary">${h2hTooltip}</p>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-40 themed-tooltip border border-brand-overlay rounded-lg py-2.5 px-3 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1 font-bold">Head to Head</p>
+                                <p class="text-[12px] font-bold text-brand-primary">${h2hTooltip}</p>
                                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
                             </div>
                         </div>
-                        <span class="font-bold text-sm text-brand-primary">${abbrB}</span>
+                        <span class="font-extrabold text-sm tracking-tight text-brand-primary">${abbrB}</span>
                     </div>
                 </div>
                 <div class="pt-4 border-t border-brand-overlay">
