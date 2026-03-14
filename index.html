@@ -28,18 +28,73 @@
     }
 </script>
 <style>
+    /* ═══ THEME VARIABLES ═══ */
+    :root, [data-theme="dark"] {
+      --bg-body: #020617;
+      --bg-surface: #1E293B;
+      --bg-glass: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-primary: #ffffff;
+      --text-secondary: #94A3B8;
+      --text-on-accent: #020617;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --table-border: rgba(255, 255, 255, 0.05);
+      --table-hover: rgba(255, 255, 255, 0.03);
+      --card-bg: #1E293B;
+      --tooltip-bg: #020617;
+      --modal-backdrop: rgba(2, 6, 23, 0.9);
+      --accent: #F97316;
+      --input-bg: #020617;
+    }
+    [data-theme="light"] {
+      --bg-body: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-glass: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --text-on-accent: #FFFFFF;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --table-border: rgba(0, 0, 0, 0.06);
+      --table-hover: rgba(0, 0, 0, 0.03);
+      --card-bg: #FFFFFF;
+      --tooltip-bg: #0F172A;
+      --modal-backdrop: rgba(0, 0, 0, 0.5);
+      --accent: #EA580C;
+      --input-bg: #F1F5F9;
+    }
+
+    body { background-color: var(--bg-body); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .glass-effect {
-      background: rgba(30, 41, 59, 0.7);
+      background: var(--bg-glass);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--glass-border);
     }
+    /* ═══ ENHANCED SELECTED GLOW ═══ */
     .selected-glow {
-      box-shadow: 0 0 15px 2px rgba(249, 115, 22, 0.4);
+      box-shadow: 0 0 20px 6px rgba(249, 115, 22, 0.5), 0 0 40px 12px rgba(249, 115, 22, 0.2), inset 0 0 8px rgba(249, 115, 22, 0.15);
       border-color: #F97316 !important;
+      border-width: 3px !important;
+      animation: pulse-glow 2s ease-in-out infinite;
     }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px 6px rgba(249, 115, 22, 0.5), 0 0 40px 12px rgba(249, 115, 22, 0.2); }
+      50% { box-shadow: 0 0 28px 10px rgba(249, 115, 22, 0.6), 0 0 50px 16px rgba(249, 115, 22, 0.3); }
+    }
+    .selected-check {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 20px; height: 20px;
+      background: #F97316; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(249, 115, 22, 0.5);
+      z-index: 5;
+    }
+    .selected-check svg { width: 12px; height: 12px; color: white; }
+
     .stats-tooltip {
       visibility: hidden; opacity: 0;
       transition: opacity 0.2s, visibility 0.2s;
@@ -62,14 +117,31 @@
       transform: translateY(20px);
       transition: transform 0.3s;
     }
-    /* Leaderboard & Results table styles */
+    /* Themed components */
+    .themed-card { background-color: var(--card-bg); border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
+    .themed-text { color: var(--text-secondary); }
+    .themed-chip { background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .themed-input { background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
+    .themed-modal-bg { background-color: var(--modal-backdrop); }
+    .themed-modal { background-color: var(--card-bg); border: 1px solid var(--border-color); }
+    .themed-tooltip { background-color: var(--tooltip-bg); }
+    /* Table styles */
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .data-table th { color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-    .data-table tr:hover td { background-color: rgba(255,255,255,0.03); }
+    .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--table-border); }
+    .data-table th { color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .data-table tr:hover td { background-color: var(--table-hover); }
+    /* Theme toggle button */
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 1px solid var(--border-color);
+      background: var(--bg-surface); color: var(--text-secondary);
+      transition: all 0.3s; font-size: 18px;
+    }
+    .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
 </style>
 </head>
-<body class="bg-brand-darker text-white font-sans h-full flex flex-col antialiased">
+<body class="font-sans h-full flex flex-col antialiased" data-theme="dark">
 
 <!-- ═══════════════ STICKY HEADER ═══════════════ -->
 <header class="sticky top-0 z-50 glass-effect px-5 py-3.5 flex items-center justify-between">
@@ -78,9 +150,10 @@
         <h1 class="text-lg font-bold tracking-tight">Predictor</h1>
     </div>
     <div class="flex items-center gap-3">
-        <span class="text-xs font-medium text-brand-text cursor-pointer" id="userChip" onclick="promptLogin()">Guest</span>
-        <div class="w-9 h-9 rounded-full border-2 border-brand-accent/30 bg-brand-muted flex items-center justify-center overflow-hidden cursor-pointer" onclick="promptLogin()">
-            <span class="material-symbols-outlined text-brand-text text-lg">person</span>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+        <span class="text-xs font-medium cursor-pointer themed-text" id="userChip" onclick="promptLogin()">Guest</span>
+        <div class="w-9 h-9 rounded-full border-2 border-brand-accent/30 flex items-center justify-center overflow-hidden cursor-pointer themed-card" onclick="promptLogin()">
+            <span class="material-symbols-outlined themed-text text-lg">person</span>
         </div>
     </div>
 </header>
@@ -272,8 +345,26 @@
         RR: 'bg-pink-900/30', DC: 'bg-blue-800/30', PBKS: 'bg-red-800/30', LSG: 'bg-cyan-900/30'
     };
 
+    // ─── THEME ──────────────────────────
+    function initTheme() {
+        const saved = localStorage.getItem('ipl_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        const toggleBtn = document.getElementById('themeToggle');
+        if (toggleBtn) toggleBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', target);
+        localStorage.setItem('ipl_theme', target);
+        const toggleBtn = document.getElementById('themeToggle');
+        if (toggleBtn) toggleBtn.textContent = target === 'dark' ? '☀️' : '🌙';
+    }
+
     // ─── INIT ──────────────────────────
     async function init() {
+        initTheme();
         if (!currentUser) promptLogin();
         else document.getElementById('userChip').textContent = currentUser;
 
@@ -492,50 +583,54 @@
             const bgB = TEAM_BG[abbrB] || 'bg-white/5';
             const glowA = pickValue === m.teamA ? 'selected-glow' : '';
             const glowB = pickValue === m.teamB ? 'selected-glow' : '';
+            const checkA = pickValue === m.teamA ? '<div class="selected-check"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>' : '';
+            const checkB = pickValue === m.teamB ? '<div class="selected-check"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>' : '';
 
             const card = document.createElement('article');
-            card.className = 'bg-brand-muted rounded-2xl p-5 shadow-xl border border-white/10 transition-transform active:scale-[0.98]';
+            card.className = 'themed-card rounded-2xl p-5 shadow-xl transition-transform active:scale-[0.98]';
             card.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] uppercase tracking-widest text-brand-accent font-bold">${m.dateLabel}</span>
-                    <span class="text-[10px] text-brand-text bg-white/5 px-2.5 py-1 rounded">${m.venue}</span>
+                    <span class="text-[10px] themed-chip px-2.5 py-1 rounded">${m.venue}</span>
                 </div>
                 <div class="flex items-center justify-between mb-5 relative">
                     <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                         <div class="relative">
                             <div class="w-16 h-16 ${bgA} rounded-full flex items-center justify-center p-2 border-2 ${colorA} ${glowA}">
-                                <img alt="${abbrA}" class="w-full h-full object-contain" src="./images_final/${abbrA}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}';">
+                                <img alt="${abbrA}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrA}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}';">
                             </div>
-                            <div class="absolute -top-1 -right-1 bg-brand-muted border border-white/20 rounded-full p-0.5 shadow-lg">
-                                <span class="material-symbols-outlined text-[14px] text-brand-text">info</span>
+                            ${checkA}
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                                <span class="material-symbols-outlined text-[14px] themed-text">info</span>
                             </div>
-                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-10 w-36 bg-brand-darker border border-white/20 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-36 themed-tooltip border border-white/10 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
                                 <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
-                                <p class="text-[11px] font-bold">${h2hTooltip}</p>
+                                <p class="text-[11px] font-bold text-white">${h2hTooltip}</p>
                                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
                             </div>
                         </div>
-                        <span class="font-bold text-sm">${abbrA}</span>
+                        <span class="font-bold text-sm text-brand-primary">${abbrA}</span>
                     </div>
                     <div class="flex flex-col items-center">
-                        <span class="text-xl font-black italic text-white/10">VS</span>
+                        <span class="text-xl font-black italic opacity-20">VS</span>
                         <div class="countdown text-[10px] text-brand-accent font-mono mt-1" data-time="${m.startTimeISO}">...</div>
                     </div>
                     <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                         <div class="relative">
                             <div class="w-16 h-16 ${bgB} rounded-full flex items-center justify-center p-2 border-2 ${colorB} ${glowB}">
-                                <img alt="${abbrB}" class="w-full h-full object-contain" src="./images_final/${abbrB}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}';">
+                                <img alt="${abbrB}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrB}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}';">
                             </div>
-                            <div class="absolute -top-1 -right-1 bg-brand-muted border border-white/20 rounded-full p-0.5 shadow-lg">
-                                <span class="material-symbols-outlined text-[14px] text-brand-text">info</span>
+                            ${checkB}
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                                <span class="material-symbols-outlined text-[14px] themed-text">info</span>
                             </div>
-                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-10 w-36 bg-brand-darker border border-white/20 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-20 w-36 themed-tooltip border border-white/10 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
                                 <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
-                                <p class="text-[11px] font-bold">${h2hTooltip}</p>
+                                <p class="text-[11px] font-bold text-white">${h2hTooltip}</p>
                                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
                             </div>
                         </div>
-                        <span class="font-bold text-sm">${abbrB}</span>
+                        <span class="font-bold text-sm text-brand-primary">${abbrB}</span>
                     </div>
                 </div>
                 <div class="pt-4 border-t border-white/5">
