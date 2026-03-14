@@ -102,7 +102,9 @@
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary), #8b5cf6);
             -webkit-background-clip: text;
+            background-clip: text; /* Added for compatibility */
             -webkit-text-fill-color: transparent;
+            color: transparent; /* Ensures text is transparent for background-clip */
         }
 
         .team-filters {
@@ -900,28 +902,7 @@
         }
 
         // API FETCH
-        async function fetchSchedule() {
-            try {
-                const res = await fetch('/api/schedule');
-                const data = await res.json();
-                scheduleData = data.matches || [];
-            } catch (e) { console.error('Error fetching schedule', e); }
-        }
 
-        async function fetchMyPicks() {
-            if (!currentUser) return;
-            try {
-                const res = await fetch(`/api/picks/${encodeURIComponent(currentUser)}`);
-                myPicks = await res.json();
-            } catch (e) { console.error('Error fetching picks', e); }
-        }
-
-        async function fetchH2H() {
-            try {
-                const res = await fetch('/api/h2h');
-                const data = await res.json();
-                h2hData = data.records || {};
-            } catch (e) { console.error('Error fetching H2H', e); }
         async function fetchLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
@@ -1219,10 +1200,15 @@
                 tbody.innerHTML = rows.reverse().join('');
             }
 
-            document.getElementById('resCorrect').textContent = correct;
-            document.getElementById('resWrong').textContent = wrong;
+            // Make sure these elements exist before trying to set their textContent
+            const elCorrect = document.getElementById('resCorrect');
+            const elWrong = document.getElementById('resWrong');
+            const elAcc = document.getElementById('resAcc');
+            
+            if (elCorrect) elCorrect.textContent = correct;
+            if (elWrong) elWrong.textContent = wrong;
             const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
-            document.getElementById('resAcc').textContent = acc + '%';
+            if (elAcc) elAcc.textContent = acc + '%';
         }
 
         // Start
