@@ -469,7 +469,7 @@
 
         await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
         renderUpcomingMatches();
-        setupTeamFilter();
+        setupFilters();
         setInterval(updateCountdowns, 1000);
 
         setInterval(() => {
@@ -532,7 +532,7 @@
                 document.querySelectorAll('.team-filter-item').forEach(b => {
                     b.classList.remove('active');
                 });
-                e.currentTarget.classList.add('bg-brand-accent', 'text-brand-darker', 'font-bold', 'active');
+                e.currentTarget.classList.add('active');
                 activeFilter = e.currentTarget.dataset.team;
                 renderUpcomingMatches();
             });
