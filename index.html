@@ -108,9 +108,11 @@
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary), #8b5cf6);
             -webkit-background-clip: text;
-            background-clip: text; /* Added for compatibility */
+            background-clip: text;
+            /* Added for compatibility */
             -webkit-text-fill-color: transparent;
-            color: transparent; /* Ensures text is transparent for background-clip */
+            color: transparent;
+            /* Ensures text is transparent for background-clip */
         }
 
         .team-filters {
@@ -684,15 +686,21 @@
             <div class="team-filters" id="teamFilters">
                 <button class="team-badge text-badge active" data-team="All">All</button>
                 <button class="team-badge" data-team="MI" title="MI"><img src="/images_final/MI.png" alt="MI"></button>
-                <button class="team-badge" data-team="CSK" title="CSK"><img src="/images_final/CSK.png" alt="CSK"></button>
-                <button class="team-badge" data-team="KKR" title="KKR"><img src="/images_final/KKR.png" alt="KKR"></button>
-                <button class="team-badge" data-team="SRH" title="SRH"><img src="/images_final/SRH.png" alt="SRH"></button>
-                <button class="team-badge" data-team="RCB" title="RCB"><img src="/images_final/RCB.png" alt="RCB"></button>
+                <button class="team-badge" data-team="CSK" title="CSK"><img src="/images_final/CSK.png"
+                        alt="CSK"></button>
+                <button class="team-badge" data-team="KKR" title="KKR"><img src="/images_final/KKR.png"
+                        alt="KKR"></button>
+                <button class="team-badge" data-team="SRH" title="SRH"><img src="/images_final/SRH.png"
+                        alt="SRH"></button>
+                <button class="team-badge" data-team="RCB" title="RCB"><img src="/images_final/RCB.png"
+                        alt="RCB"></button>
                 <button class="team-badge" data-team="GT" title="GT"><img src="/images_final/GT.png" alt="GT"></button>
                 <button class="team-badge" data-team="RR" title="RR"><img src="/images_final/RR.png" alt="RR"></button>
                 <button class="team-badge" data-team="DC" title="DC"><img src="/images_final/DC.png" alt="DC"></button>
-                <button class="team-badge" data-team="PBS" title="PBKS"><img src="/images_final/PBS.png" alt="PBS"></button>
-                <button class="team-badge" data-team="LSG" title="LSG"><img src="/images_final/LSG.png" alt="LSG"></button>
+                <button class="team-badge" data-team="PBS" title="PBKS"><img src="/images_final/PBS.png"
+                        alt="PBS"></button>
+                <button class="team-badge" data-team="LSG" title="LSG"><img src="/images_final/LSG.png"
+                        alt="LSG"></button>
             </div>
         </div>
         <div class="header-right">
@@ -933,7 +941,7 @@
                 const schedRes = await fetch('./schedule.json');
                 const schedData = await schedRes.json();
                 const allMatches = schedData.matches;
-                
+
                 // Construct results map
                 const resultsMap = {};
                 allMatches.forEach(m => {
@@ -955,7 +963,7 @@
                     if (!userStats[p.userName]) {
                         userStats[p.userName] = { name: p.userName, correct: 0, total: 0 };
                     }
-                    
+
                     if (resultsMap[p.matchId] !== undefined) {
                         userStats[p.userName].total++;
                         if (p.team === resultsMap[p.matchId]) {
@@ -998,9 +1006,23 @@
         }
 
         function getH2HString(tA, tB) {
-            if (!h2hData[tA] || !h2hData[tA][tB]) return 'No data';
-            const record = h2hData[tA][tB];
-            return `${tA} ${record.home} - ${record.away} ${tB}`;
+            // Calculate total wins for each team by checking both directions
+            let winsA = 0, winsB = 0;
+            
+            // tA's wins against tB (home + away)
+            if (h2hData[tA] && h2hData[tA][tB]) {
+                winsA += (h2hData[tA][tB].home || 0) + (h2hData[tA][tB].away || 0);
+            }
+            // tB's wins against tA (home + away)
+            if (h2hData[tB] && h2hData[tB][tA]) {
+                winsB += (h2hData[tB][tA].home || 0) + (h2hData[tB][tA].away || 0);
+            }
+
+            if (winsA === 0 && winsB === 0) return 'No H2H data';
+
+            const abbrA = TEAM_ABBR[tA] || tA;
+            const abbrB = TEAM_ABBR[tB] || tB;
+            return `${abbrA} ${winsA} - ${winsB} ${abbrB}`;
         }
 
         // RENDER UPCOMING
@@ -1093,35 +1115,35 @@
             btn.disabled = true;
 
             try {
-                 // 1. Fetch current picks from JSONBin
-                 const currentRes = await fetch(JSONBIN_URL, {
-                     headers: { 'X-Master-Key': MASTER_KEY }
-                 });
-                 const currentData = await currentRes.json();
-                 let allPicks = currentData.record.picks || [];
+                // 1. Fetch current picks from JSONBin
+                const currentRes = await fetch(JSONBIN_URL, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const currentData = await currentRes.json();
+                let allPicks = currentData.record.picks || [];
 
-                 // 2. Remove any existing pick for this match by this user
-                 allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
+                // 2. Remove any existing pick for this match by this user
+                allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
 
-                 // 3. Add the new pick
-                 const newPick = {
-                     userName: currentUser,
-                     matchId: matchId,
-                     team: team,
-                     frozen: true,
-                     timestamp: new Date().toISOString()
-                 };
-                 allPicks.push(newPick);
+                // 3. Add the new pick
+                const newPick = {
+                    userName: currentUser,
+                    matchId: matchId,
+                    team: team,
+                    frozen: true,
+                    timestamp: new Date().toISOString()
+                };
+                allPicks.push(newPick);
 
-                 // 4. Save back to JSONBin
-                 const saveRes = await fetch(JSONBIN_URL, {
-                     method: 'PUT',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-Master-Key': MASTER_KEY
-                     },
-                     body: JSON.stringify({ picks: allPicks })
-                 });
+                // 4. Save back to JSONBin
+                const saveRes = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify({ picks: allPicks })
+                });
 
                 if (saveRes.ok) {
                     await fetchMyPicks();
@@ -1225,7 +1247,7 @@
             const elCorrect = document.getElementById('resCorrect');
             const elWrong = document.getElementById('resWrong');
             const elAcc = document.getElementById('resAcc');
-            
+
             if (elCorrect) elCorrect.textContent = correct;
             if (elWrong) elWrong.textContent = wrong;
             const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
