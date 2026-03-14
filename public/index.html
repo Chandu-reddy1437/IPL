@@ -799,6 +799,45 @@
             }, 60000);
         }
 
+        // DATA FETCHING
+        const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
+        const MASTER_KEY = '$2a$10$hkFvOh3x6zhiDHHRVZteKOec/i2JSy.JXIX4qMTyYx4BvIs2m8.Fu';
+
+        async function fetchSchedule() {
+            try {
+                // Now fetching the static file directly since we're on GH Pages
+                const res = await fetch('./schedule.json');
+                const data = await res.json();
+                scheduleData = data.matches;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchMyPicks() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(JSONBIN_URL, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const data = await res.json();
+                const allPicks = data.record.picks || [];
+                myPicks = allPicks.filter(p => p.userName === currentUser);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchH2H() {
+            try {
+                // Now fetching the static file directly
+                const res = await fetch('./h2h.json');
+                h2hData = await res.json();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         // THEME
         function initTheme() {
             const saved = localStorage.getItem('ipl_theme') || 'dark';
@@ -883,33 +922,77 @@
                 const data = await res.json();
                 h2hData = data.records || {};
             } catch (e) { console.error('Error fetching H2H', e); }
-        }
-
         async function fetchLeaderboard() {
-            try {
-                const res = await fetch('/api/leaderboard');
-                const data = await res.json();
-                const tbody = document.getElementById('leaderboardBody');
-                tbody.innerHTML = '';
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
 
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color:var(--text-muted);">No predictions found yet.</td></tr>';
+            try {
+                // Fetch the entire static schedule locally
+                const schedRes = await fetch('./schedule.json');
+                const schedData = await schedRes.json();
+                const allMatches = schedData.matches;
+                
+                // Construct results map
+                const resultsMap = {};
+                allMatches.forEach(m => {
+                    if (m.winner !== null) {
+                        resultsMap[m.id] = m.winner;
+                    }
+                });
+
+                // Fetch ALL users' picks directly from JSONBin to calculate leaderboard locally
+                const res = await fetch(JSONBIN_URL, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const binData = await res.json();
+                const allPicks = binData.record.picks || [];
+
+                // Replicate what the old backend did
+                const userStats = {};
+                allPicks.forEach(p => {
+                    if (!userStats[p.userName]) {
+                        userStats[p.userName] = { name: p.userName, correct: 0, total: 0 };
+                    }
+                    
+                    if (resultsMap[p.matchId] !== undefined) {
+                        userStats[p.userName].total++;
+                        if (p.team === resultsMap[p.matchId]) {
+                            userStats[p.userName].correct++;
+                        }
+                    }
+                });
+
+                const leaderboard = Object.values(userStats).map(stat => {
+                    const scorePct = stat.total > 0 ? ((stat.correct / stat.total) * 100).toFixed(1) : "0.0";
+                    return { ...stat, scorePct: parseFloat(scorePct) };
+                });
+
+                leaderboard.sort((a, b) => {
+                    if (b.correct !== a.correct) return b.correct - a.correct;
+                    return b.scorePct - a.scorePct;
+                });
+
+                leaderboard.forEach((user, index) => { user.rank = index + 1; });
+
+                if (leaderboard.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No data yet</td></tr>';
                     return;
                 }
 
-                data.forEach(user => {
-                    const isMe = user.name === currentUser;
-                    tbody.innerHTML += `
-                        <tr style="${isMe ? 'background-color: var(--bg-surface-hover);' : ''}">
-                            <td>#${user.rank}</td>
-                            <td style="font-weight:600;">${user.name} ${isMe ? '<span class="you-chip">YOU</span>' : ''}</td>
-                            <td class="text-green">${user.correct}</td>
-                            <td>${user.total}</td>
-                            <td style="font-weight:700;">${user.scorePct}%</td>
-                        </tr>
-                    `;
-                });
-            } catch (e) { console.error('Error fetching leaderboard', e); }
+                tbody.innerHTML = leaderboard.map(l => `
+                    <tr>
+                        <td style="font-weight:700;">#${l.rank}</td>
+                        <td>${l.name} ${l.name === currentUser ? '<span class="you-chip">YOU</span>' : ''}</td>
+                        <td class="text-green">${l.correct}</td>
+                        <td class="text-gray">${l.total}</td>
+                        <td style="font-weight:600;">${l.scorePct}%</td>
+                    </tr>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--status-locked);">Failed to load leaderboard</td></tr>';
+            }
         }
 
         function getH2HString(tA, tB) {
@@ -984,24 +1067,61 @@
             updateCountdowns();
         }
 
+        function getMatchWinner(matchId) {
+            const match = scheduleData.find(m => m.id === matchId);
+            return match ? match.winner : null;
+        }
+
         async function submitPick(matchId) {
-            if (!currentUser) return promptLogin();
+            if (!currentUser) {
+                promptLogin();
+                return;
+            }
 
-            const team = document.getElementById(`pick-${matchId}`).value;
-            if (!team) return alert('Please select a team to predict.');
+            const selectEl = document.getElementById(`pick-${matchId}`);
+            const team = selectEl.value;
+            if (!team) {
+                alert('Please select a team');
+                return;
+            }
 
-            const btn = document.querySelector(`#pick-${matchId}`).nextElementSibling;
-            btn.textContent = '...';
+            const btn = selectEl.nextElementSibling;
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
             btn.disabled = true;
 
             try {
-                const res = await fetch('/api/picks', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userName: currentUser, matchId, team })
-                });
+                 // 1. Fetch current picks from JSONBin
+                 const currentRes = await fetch(JSONBIN_URL, {
+                     headers: { 'X-Master-Key': MASTER_KEY }
+                 });
+                 const currentData = await currentRes.json();
+                 let allPicks = currentData.record.picks || [];
 
-                if (res.ok) {
+                 // 2. Remove any existing pick for this match by this user
+                 allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
+
+                 // 3. Add the new pick
+                 const newPick = {
+                     userName: currentUser,
+                     matchId: matchId,
+                     team: team,
+                     frozen: true,
+                     timestamp: new Date().toISOString()
+                 };
+                 allPicks.push(newPick);
+
+                 // 4. Save back to JSONBin
+                 const saveRes = await fetch(JSONBIN_URL, {
+                     method: 'PUT',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'X-Master-Key': MASTER_KEY
+                     },
+                     body: JSON.stringify({ picks: allPicks })
+                 });
+
+                if (saveRes.ok) {
                     await fetchMyPicks();
                     const existingPick = myPicks.find(p => p.matchId === matchId);
                     btn.textContent = 'Update';
@@ -1010,15 +1130,15 @@
                     btn.style.backgroundColor = '#10b981';
                     setTimeout(() => btn.style.backgroundColor = '', 1000);
                 } else {
-                    const err = await res.json();
-                    alert(err.error || 'Failed to submit pick.');
-                    btn.textContent = 'Submit';
+                    const err = await saveRes.json();
+                    alert(err.message || 'Failed to submit pick.');
+                    btn.textContent = originalText;
                     btn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
                 alert('Network error.');
-                btn.textContent = 'Submit';
+                btn.textContent = originalText;
                 btn.disabled = false;
             }
         }
