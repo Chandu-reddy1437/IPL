@@ -1,12 +1,183 @@
 {
     "matches": [
         {
-            "id": "2026-03-19T19:30:00+05:30-Mumbai_Indians-vs-Chennai_Super_Kings",
-            "dateLabel": "Thu, 19 Mar '26",
+            "id": "2026-03-28T19:30:00+05:30-Royal_Challengers_Bangalore-vs-Sunrisers_Hyderabad",
+            "dateLabel": "Sat, 28 Mar '26",
+            "teamA": "Royal Challengers Bangalore",
+            "teamB": "Sunrisers Hyderabad",
+            "venue": "M. Chinnaswamy Stadium, Bengaluru",
+            "startTimeISO": "2026-03-28T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-03-29T19:30:00+05:30-Mumbai_Indians-vs-Kolkata_Knight_Riders",
+            "dateLabel": "Sun, 29 Mar '26",
             "teamA": "Mumbai Indians",
-            "teamB": "Chennai Super Kings",
+            "teamB": "Kolkata Knight Riders",
             "venue": "Wankhede Stadium, Mumbai",
-            "startTimeISO": "2026-03-19T19:30:00+05:30",
+            "startTimeISO": "2026-03-29T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-03-30T19:30:00+05:30-Rajasthan_Royals-vs-Chennai_Super_Kings",
+            "dateLabel": "Mon, 30 Mar '26",
+            "teamA": "Rajasthan Royals",
+            "teamB": "Chennai Super Kings",
+            "venue": "Barsapara Cricket Stadium, Guwahati",
+            "startTimeISO": "2026-03-30T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-03-31T19:30:00+05:30-Punjab_Kings-vs-Gujarat_Titans",
+            "dateLabel": "Tue, 31 Mar '26",
+            "teamA": "Punjab Kings",
+            "teamB": "Gujarat Titans",
+            "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+            "startTimeISO": "2026-03-31T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-01T19:30:00+05:30-Lucknow_Super_Giants-vs-Delhi_Capitals",
+            "dateLabel": "Wed, 1 Apr '26",
+            "teamA": "Lucknow Super Giants",
+            "teamB": "Delhi Capitals",
+            "venue": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+            "startTimeISO": "2026-04-01T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-02T19:30:00+05:30-Kolkata_Knight_Riders-vs-Sunrisers_Hyderabad",
+            "dateLabel": "Thu, 2 Apr '26",
+            "teamA": "Kolkata Knight Riders",
+            "teamB": "Sunrisers Hyderabad",
+            "venue": "Eden Gardens, Kolkata",
+            "startTimeISO": "2026-04-02T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-03T19:30:00+05:30-Chennai_Super_Kings-vs-Punjab_Kings",
+            "dateLabel": "Fri, 3 Apr '26",
+            "teamA": "Chennai Super Kings",
+            "teamB": "Punjab Kings",
+            "venue": "MA Chidambaram Stadium, Chennai",
+            "startTimeISO": "2026-04-03T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-04T15:30:00+05:30-Delhi_Capitals-vs-Mumbai_Indians",
+            "dateLabel": "Sat, 4 Apr '26",
+            "teamA": "Delhi Capitals",
+            "teamB": "Mumbai Indians",
+            "venue": "Arun Jaitley Stadium, Delhi",
+            "startTimeISO": "2026-04-04T15:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-04T19:30:00+05:30-Gujarat_Titans-vs-Rajasthan_Royals",
+            "dateLabel": "Sat, 4 Apr '26",
+            "teamA": "Gujarat Titans",
+            "teamB": "Rajasthan Royals",
+            "venue": "Narendra Modi Stadium, Ahmedabad",
+            "startTimeISO": "2026-04-04T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-05T15:30:00+05:30-Sunrisers_Hyderabad-vs-Lucknow_Super_Giants",
+            "dateLabel": "Sun, 5 Apr '26",
+            "teamA": "Sunrisers Hyderabad",
+            "teamB": "Lucknow Super Giants",
+            "venue": "Rajiv Gandhi International Stadium, Hyderabad",
+            "startTimeISO": "2026-04-05T15:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-05T19:30:00+05:30-Royal_Challengers_Bangalore-vs-Chennai_Super_Kings",
+            "dateLabel": "Sun, 5 Apr '26",
+            "teamA": "Royal Challengers Bangalore",
+            "teamB": "Chennai Super Kings",
+            "venue": "M. Chinnaswamy Stadium, Bengaluru",
+            "startTimeISO": "2026-04-05T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-06T19:30:00+05:30-Kolkata_Knight_Riders-vs-Punjab_Kings",
+            "dateLabel": "Mon, 6 Apr '26",
+            "teamA": "Kolkata Knight Riders",
+            "teamB": "Punjab Kings",
+            "venue": "Eden Gardens, Kolkata",
+            "startTimeISO": "2026-04-06T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-07T19:30:00+05:30-Rajasthan_Royals-vs-Mumbai_Indians",
+            "dateLabel": "Tue, 7 Apr '26",
+            "teamA": "Rajasthan Royals",
+            "teamB": "Mumbai Indians",
+            "venue": "Barsapara Cricket Stadium, Guwahati",
+            "startTimeISO": "2026-04-07T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-08T19:30:00+05:30-Delhi_Capitals-vs-Gujarat_Titans",
+            "dateLabel": "Wed, 8 Apr '26",
+            "teamA": "Delhi Capitals",
+            "teamB": "Gujarat Titans",
+            "venue": "Arun Jaitley Stadium, Delhi",
+            "startTimeISO": "2026-04-08T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-09T19:30:00+05:30-Kolkata_Knight_Riders-vs-Lucknow_Super_Giants",
+            "dateLabel": "Thu, 9 Apr '26",
+            "teamA": "Kolkata Knight Riders",
+            "teamB": "Lucknow Super Giants",
+            "venue": "Eden Gardens, Kolkata",
+            "startTimeISO": "2026-04-09T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-10T19:30:00+05:30-Rajasthan_Royals-vs-Royal_Challengers_Bangalore",
+            "dateLabel": "Fri, 10 Apr '26",
+            "teamA": "Rajasthan Royals",
+            "teamB": "Royal Challengers Bangalore",
+            "venue": "Barsapara Cricket Stadium, Guwahati",
+            "startTimeISO": "2026-04-10T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-11T15:30:00+05:30-Punjab_Kings-vs-Sunrisers_Hyderabad",
+            "dateLabel": "Sat, 11 Apr '26",
+            "teamA": "Punjab Kings",
+            "teamB": "Sunrisers Hyderabad",
+            "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+            "startTimeISO": "2026-04-11T15:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-11T19:30:00+05:30-Chennai_Super_Kings-vs-Delhi_Capitals",
+            "dateLabel": "Sat, 11 Apr '26",
+            "teamA": "Chennai Super Kings",
+            "teamB": "Delhi Capitals",
+            "venue": "MA Chidambaram Stadium, Chennai",
+            "startTimeISO": "2026-04-11T19:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-12T15:30:00+05:30-Lucknow_Super_Giants-vs-Gujarat_Titans",
+            "dateLabel": "Sun, 12 Apr '26",
+            "teamA": "Lucknow Super Giants",
+            "teamB": "Gujarat Titans",
+            "venue": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+            "startTimeISO": "2026-04-12T15:30:00+05:30",
+            "winner": null
+        },
+        {
+            "id": "2026-04-12T19:30:00+05:30-Mumbai_Indians-vs-Royal_Challengers_Bangalore",
+            "dateLabel": "Sun, 12 Apr '26",
+            "teamA": "Mumbai Indians",
+            "teamB": "Royal Challengers Bangalore",
+            "venue": "Wankhede Stadium, Mumbai",
+            "startTimeISO": "2026-04-12T19:30:00+05:30",
             "winner": null
         }
     ]
