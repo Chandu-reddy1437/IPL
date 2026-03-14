@@ -1,853 +1,127 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
-
+<html class="h-full" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPL Predictor</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            /* Brand Colors */
-            --mi: #004BA0;
-            --csk: #FDB913;
-            --srh: #FF822A;
-            --kkr: #3A225D;
-            --gt: #1C2841;
-            --lsg: #1C4A9E;
-            --rcb: #EC1C24;
-            --dc: #004C93;
-            --pbks: #ED1B24;
-            --rr: #254AA5;
-
-            /* Base Theme (Light) */
-            --bg-body: #f8fafc;
-            --bg-surface: #ffffff;
-            --bg-surface-hover: #f1f5f9;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --primary: #3b82f6;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --header-border: rgba(0, 0, 0, 0.05);
-
-            --status-open: #f59e0b;
-            --status-locked: #ef4444;
-            --status-bg-open: rgba(245, 158, 11, 0.1);
-            --status-bg-locked: rgba(239, 68, 68, 0.1);
-            --font-main: 'Outfit', sans-serif;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-full: 9999px;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="dark"] {
-            --bg-body: #0f172a;
-            --bg-surface: #1e293b;
-            --bg-surface-hover: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --header-border: rgba(255, 255, 255, 0.05);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            grid-template-rows: auto 1fr;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* HEADER */
-        header {
-            grid-column: 1 / -1;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background-color: var(--glass-bg);
-            border-bottom: 1px solid var(--header-border);
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            flex: 1;
-        }
-
-        .header-center {
-            display: flex;
-            justify-content: center;
-            flex: 2;
-        }
-
-        .logo-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), #8b5cf6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            /* Added for compatibility */
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-            /* Ensures text is transparent for background-clip */
-        }
-
-        .team-filters {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-
-        .team-filters::-webkit-scrollbar {
-            display: none;
-        }
-
-        .team-badge {
-            width: 38px;
-            height: 38px;
-            border-radius: var(--radius-full);
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            background-color: var(--bg-surface);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 0;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .team-badge.text-badge {
-            width: auto;
-            padding: 0 18px;
-        }
-
-        .team-badge img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            pointer-events: none;
-            border-radius: 50%;
-        }
-
-        .team-badge:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .team-badge.active {
-            border-color: var(--primary);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 16px;
-            flex: 1;
-        }
-
-        .user-chip {
-            background-color: var(--bg-surface);
-            padding: 6px 16px;
-            border-radius: var(--radius-full);
-            font-weight: 500;
-            border: 1px solid var(--border);
-            cursor: pointer;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-main);
-            font-size: 1.2rem;
-        }
-
-        /* SIDEBAR (Desktop) */
-        nav.sidebar {
-            grid-column: 1 / 2;
-            background-color: var(--bg-surface);
-            border-right: 1px solid var(--border);
-            padding: 24px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .nav-item {
-            padding: 12px 24px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .nav-item:hover {
-            background-color: var(--bg-surface-hover);
-            color: var(--text-main);
-        }
-
-        .nav-item.active {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--primary);
-            border-right: 3px solid var(--primary);
-        }
-
-        /* MAIN CONTENT */
-        main {
-            grid-column: 2 / -1;
-            padding: 32px;
-            overflow-y: auto;
-        }
-
-        .view-section {
-            display: none;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .view-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPL Predictor</title>
+<link rel="manifest" href="/manifest.json">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              navy: '#0F172A',
+              darker: '#020617',
+              accent: '#F97316',
+              muted: '#1E293B',
+              text: '#94A3B8',
+              surface: '#1E293B',
             }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* CARDS & TABLES */
-        .card {
-            background-color: var(--bg-surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.3s;
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .match-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .match-card {
-            background-color: var(--bg-surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .match-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .status-chip {
-            padding: 4px 10px;
-            border-radius: var(--radius-full);
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-chip.open {
-            background-color: var(--status-bg-open);
-            color: var(--status-open);
-        }
-
-        .status-chip.locked {
-            background-color: var(--status-bg-locked);
-            color: var(--status-locked);
-        }
-
-        .match-teams {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .team-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            text-align: center;
-            cursor: help;
-            position: relative;
-        }
-
-        .team-logo {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .team-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .vs {
-            font-weight: 700;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .team-name {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .countdown {
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            margin-top: 8px;
-            color: var(--text-main);
-        }
-
-        .pick-action {
-            display: flex;
-            gap: 8px;
-            margin-top: auto;
-        }
-
-        select.pick-dropdown {
-            flex: 1;
-            padding: 10px;
-            border-radius: var(--radius-md);
-            background-color: var(--bg-body);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            outline: none;
-            font-family: var(--font-main);
-        }
-
-        button.btn-submit {
-            padding: 10px 16px;
-            border-radius: var(--radius-md);
-            border: none;
-            background-color: var(--primary);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-family: var(--font-main);
-        }
-
-        button.btn-submit:hover {
-            background-color: #2563eb;
-        }
-
-        button.btn-submit:disabled {
-            background-color: var(--text-muted);
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        /* TOOLTIP */
-        .tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-8px);
-            background-color: var(--text-main);
-            color: var(--bg-surface);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s, transform 0.2s;
-            z-index: 10;
-            font-weight: 500;
-        }
-
-        .team-info:hover .tooltip {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--text-main) transparent transparent transparent;
-        }
-
-        /* H2H DETAILS MODAL */
-        .h2h-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .h2h-modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-        .h2h-modal {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 28px 32px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-        .h2h-modal-overlay.active .h2h-modal {
-            transform: translateY(0);
-        }
-        .h2h-modal-title {
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--text-main);
-        }
-        .h2h-teams-row {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .h2h-team-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        .h2h-team-col img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-        }
-        .h2h-team-col .h2h-team-name {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-        .h2h-score-big {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        .h2h-stat-grid {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 8px 16px;
-            margin-top: 16px;
-            text-align: center;
-        }
-        .h2h-stat-grid .label {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .h2h-stat-grid .val {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-        .h2h-stat-grid .val-left { text-align: right; }
-        .h2h-stat-grid .val-right { text-align: left; }
-        .h2h-stat-grid .divider {
-            color: var(--text-muted);
-            font-weight: 300;
-        }
-        .h2h-total-row {
-            text-align: center;
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .h2h-total-row strong {
-            color: var(--text-main);
-            font-size: 1.1rem;
-        }
-        .h2h-close-btn {
-            display: block;
-            margin: 18px auto 0;
-            padding: 10px 32px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--font-main);
-        }
-        .h2h-close-btn:hover {
-            background-color: #2563eb;
-        }
-
-        /* DATA TABLE */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            font-weight: 600;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background-color: var(--bg-surface-hover);
-        }
-
-        .you-chip {
-            background-color: var(--primary);
-            color: white;
-            padding: 2px 8px;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-
-        /* STATS BAR */
-        .stats-bar {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .stat-box {
-            flex: 1;
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border);
-            padding: 24px;
-            border-radius: var(--radius-lg);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-card {
-            background-color: var(--bg-surface);
-            padding: 32px;
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-
-        .modal-overlay.active .modal-card {
-            transform: translateY(0);
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            margin-top: 0;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-size: 1rem;
-            margin-bottom: 16px;
-            outline: none;
-            font-family: var(--font-main);
-        }
-
-        .modal-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .modal-btn {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: var(--font-main);
-        }
-
-        .modal-btn:hover {
-            background-color: #2563eb;
-        }
-
-        /* BOTTOM NAV (Mobile) */
-        .bottom-nav {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
-            }
-
-            nav.sidebar {
-                display: none;
-            }
-
-            main {
-                padding: 16px;
-                padding-bottom: 80px;
-            }
-
-            .header-left .logo-title {
-                font-size: 1rem;
-            }
-
-            .team-filters {
-                display: none;
-            }
-
-            .bottom-nav {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background-color: var(--bg-surface);
-                border-top: 1px solid var(--border);
-                z-index: 50;
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-
-            .bottom-nav-item {
-                flex: 1;
-                padding: 12px 0;
-                text-align: center;
-                color: var(--text-muted);
-                font-size: 0.75rem;
-                font-weight: 500;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-            }
-
-            .bottom-nav-item.active {
-                color: var(--primary);
-            }
-
-            .stats-bar {
-                flex-direction: column;
-                gap: 16px;
-            }
-        }
-
-        /* Utilities */
-        .text-green {
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        .text-red {
-            color: #ef4444;
-            font-weight: 600;
-        }
-
-        .text-gray {
-            color: var(--text-muted);
-        }
-    </style>
+          }
+        }
+      }
+    }
+</script>
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass-effect {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .selected-glow {
+      box-shadow: 0 0 15px 2px rgba(249, 115, 22, 0.4);
+      border-color: #F97316 !important;
+    }
+    .stats-tooltip {
+      visibility: hidden; opacity: 0;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .has-stats:hover .stats-tooltip, .has-stats:focus-within .stats-tooltip {
+      visibility: visible; opacity: 1;
+    }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .modal-overlay {
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.active {
+      opacity: 1; pointer-events: all;
+    }
+    .modal-overlay.active .modal-inner {
+      transform: translateY(0);
+    }
+    .modal-inner {
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+    /* Leaderboard & Results table styles */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .data-table th { color: #94A3B8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .data-table tr:hover td { background-color: rgba(255,255,255,0.03); }
+</style>
 </head>
+<body class="bg-brand-darker text-white font-sans h-full flex flex-col antialiased">
 
-<body>
-
-    <header>
-        <div class="header-left">
-            <div class="logo-title">IPL Predictor</div>
+<!-- ═══════════════ STICKY HEADER ═══════════════ -->
+<header class="sticky top-0 z-50 glass-effect px-5 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 bg-brand-accent rounded-lg flex items-center justify-center font-extrabold text-brand-darker text-xs">IPL</div>
+        <h1 class="text-lg font-bold tracking-tight">Predictor</h1>
+    </div>
+    <div class="flex items-center gap-3">
+        <span class="text-xs font-medium text-brand-text cursor-pointer" id="userChip" onclick="promptLogin()">Guest</span>
+        <div class="w-9 h-9 rounded-full border-2 border-brand-accent/30 bg-brand-muted flex items-center justify-center overflow-hidden cursor-pointer" onclick="promptLogin()">
+            <span class="material-symbols-outlined text-brand-text text-lg">person</span>
         </div>
-        <div class="header-center">
-            <div class="team-filters" id="teamFilters">
-                <button class="team-badge text-badge active" data-team="All">All</button>
-                <button class="team-badge" data-team="MI" title="MI"><img src="/images_final/MI.png" alt="MI"></button>
-                <button class="team-badge" data-team="CSK" title="CSK"><img src="/images_final/CSK.png"
-                        alt="CSK"></button>
-                <button class="team-badge" data-team="KKR" title="KKR"><img src="/images_final/KKR.png"
-                        alt="KKR"></button>
-                <button class="team-badge" data-team="SRH" title="SRH"><img src="/images_final/SRH.png"
-                        alt="SRH"></button>
-                <button class="team-badge" data-team="RCB" title="RCB"><img src="/images_final/RCB.png"
-                        alt="RCB"></button>
-                <button class="team-badge" data-team="GT" title="GT"><img src="/images_final/GT.png" alt="GT"></button>
-                <button class="team-badge" data-team="RR" title="RR"><img src="/images_final/RR.png" alt="RR"></button>
-                <button class="team-badge" data-team="DC" title="DC"><img src="/images_final/DC.png" alt="DC"></button>
-                <button class="team-badge" data-team="PBS" title="PBKS"><img src="/images_final/PBS.png"
-                        alt="PBS"></button>
-                <button class="team-badge" data-team="LSG" title="LSG"><img src="/images_final/LSG.png"
-                        alt="LSG"></button>
+    </div>
+</header>
+
+<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-24">
+
+    <!-- UPCOMING MATCHES VIEW -->
+    <div id="view-upcoming" class="view-section active">
+        <section class="px-5 pt-6 pb-2">
+            <h2 class="text-2xl font-bold mb-1">Upcoming Matches</h2>
+            <p class="text-brand-text text-sm mb-5">Predict and climb the leaderboard.</p>
+            <!-- Team Filter Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 pb-2" id="teamFilters">
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-accent text-brand-darker font-bold text-xs active" data-team="All">All Teams</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="MI">MI</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="CSK">CSK</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="RCB">RCB</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="KKR">KKR</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="SRH">SRH</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="RR">RR</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="GT">GT</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="DC">DC</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="PBS">PBKS</button>
+                <button class="team-badge whitespace-nowrap px-4 py-2 rounded-full bg-brand-muted border border-white/10 text-brand-text text-xs hover:text-white transition-colors" data-team="LSG">LSG</button>
             </div>
+        </section>
+        <div class="px-5 space-y-5" id="upcomingMatchesContainer">
+            <!-- JS injected match cards -->
         </div>
-        <div class="header-right">
-            <div class="user-chip" id="userChip" onclick="promptLogin()">Guest</div>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">☀️</button>
-        </div>
-    </header>
+    </div>
 
-    <nav class="sidebar">
-        <div class="nav-item active" onclick="switchView('upcoming')">Upcoming Matches</div>
-        <div class="nav-item" onclick="switchView('leaderboard')">Leaderboard</div>
-        <div class="nav-item" onclick="switchView('results')">My Results</div>
-    </nav>
-
-    <main>
-        <!-- UPCOMING MATCHES VIEW -->
-        <div id="view-upcoming" class="view-section active">
-            <h2 style="margin-bottom: 24px;">Matches</h2>
-            <div class="match-grid" id="upcomingMatchesContainer">
-                <!-- Injected via JS -->
-            </div>
-        </div>
-
-        <!-- LEADERBOARD VIEW -->
-        <div id="view-leaderboard" class="view-section">
-            <h2 style="margin-bottom: 24px;">Leaderboard</h2>
-            <div class="card" style="padding: 0; overflow-x: auto;">
-                <table>
+    <!-- LEADERBOARD VIEW -->
+    <div id="view-leaderboard" class="view-section">
+        <section class="px-5 pt-6 pb-4">
+            <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
+            <p class="text-brand-text text-sm">See who's leading the predictions.</p>
+        </section>
+        <div class="px-5">
+            <div class="bg-brand-muted rounded-2xl border border-white/10 overflow-hidden">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Rank</th>
@@ -858,606 +132,553 @@
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody">
-                        <!-- Injected via JS -->
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- MY RESULTS VIEW -->
-        <div id="view-results" class="view-section">
-            <h2 style="margin-bottom: 24px;">My Performance</h2>
-            <div class="stats-bar">
-                <div class="stat-box">
-                    <div class="stat-value" id="resCorrect">0</div>
-                    <div class="stat-label">Correct Picks</div>
+    <!-- MY RESULTS VIEW -->
+    <div id="view-results" class="view-section">
+        <section class="px-5 pt-6 pb-4">
+            <h2 class="text-2xl font-bold mb-1">My Performance</h2>
+            <p class="text-brand-text text-sm mb-5">Track your prediction accuracy.</p>
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="bg-brand-muted rounded-xl border border-white/10 p-4 text-center">
+                    <div class="text-2xl font-extrabold text-green-400" id="resCorrect">0</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Correct</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="resWrong" style="color: var(--status-locked);">0</div>
-                    <div class="stat-label">Wrong Picks</div>
+                <div class="bg-brand-muted rounded-xl border border-white/10 p-4 text-center">
+                    <div class="text-2xl font-extrabold text-red-400" id="resWrong">0</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Wrong</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="resAcc" style="color: #10b981;">0%</div>
-                    <div class="stat-label">Accuracy</div>
+                <div class="bg-brand-muted rounded-xl border border-white/10 p-4 text-center">
+                    <div class="text-2xl font-extrabold text-brand-accent" id="resAcc">0%</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Accuracy</div>
                 </div>
             </div>
-            <div class="card" style="padding: 0; overflow-x: auto;">
-                <table>
+        </section>
+        <div class="px-5">
+            <div class="bg-brand-muted rounded-2xl border border-white/10 overflow-hidden">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Fixture</th>
                             <th>Your Pick</th>
-                            <th>Status / Winner</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="resultsBody">
-                        <!-- Injected via JS -->
                     </tbody>
                 </table>
             </div>
         </div>
-    </main>
-
-    <div class="bottom-nav">
-        <div class="bottom-nav-item active" onclick="switchView('upcoming')">Matches</div>
-        <div class="bottom-nav-item" onclick="switchView('leaderboard')">Leaderboard</div>
-        <div class="bottom-nav-item" onclick="switchView('results')">Results</div>
     </div>
+</main>
 
-    <!-- Login Modal -->
-    <div class="modal-overlay" id="loginModal">
-        <div class="modal-card">
-            <h2 class="modal-title">Welcome to IPL Predictor</h2>
-            <p style="color: var(--text-muted); margin-bottom: 24px;">Enter your name to start predicting matches.</p>
-            <input type="text" id="loginInput" class="modal-input" placeholder="Your Name"
-                onkeydown="if(event.key==='Enter') saveName()">
-            <button class="modal-btn" onclick="saveName()">Let's Go</button>
-        </div>
+<!-- ═══════════════ BOTTOM NAVIGATION ═══════════════ -->
+<nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-white/5 pb-[env(safe-area-inset-bottom)] pt-3 px-8 flex justify-between items-center z-50">
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-accent active" href="#" onclick="switchView('upcoming'); return false;">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        <span class="text-[10px] font-bold">Matches</span>
+    </a>
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-white transition-colors" href="#" onclick="switchView('leaderboard'); return false;">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span class="text-[10px] font-bold">Leaderboard</span>
+    </a>
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-white transition-colors" href="#" onclick="switchView('results'); return false;">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span class="text-[10px] font-bold">My Results</span>
+    </a>
+</nav>
+
+<!-- ═══════════════ LOGIN MODAL ═══════════════ -->
+<div class="modal-overlay fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:p-0" id="loginModal">
+    <div class="fixed inset-0 bg-brand-darker/90 backdrop-blur-sm" onclick="document.getElementById('loginModal').classList.remove('active')"></div>
+    <div class="modal-inner relative bg-brand-muted border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-8">
+        <h3 class="text-2xl font-bold mb-2">Welcome to IPL Predictor</h3>
+        <p class="text-brand-text text-sm mb-8 leading-relaxed">Enter your name to start predicting matches and winning rewards.</p>
+        <label class="sr-only" for="loginInput">Your Name</label>
+        <input class="block w-full rounded-xl bg-brand-darker border border-white/10 text-white focus:border-brand-accent focus:ring-brand-accent text-lg py-4 px-4 mb-5" id="loginInput" placeholder="Your Name" type="text" onkeydown="if(event.key==='Enter') saveName()"/>
+        <button class="w-full bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-4 rounded-xl shadow-lg transition-all text-lg" onclick="saveName()">
+            Let's Go
+        </button>
     </div>
+</div>
 
-    <!-- H2H Details Modal -->
-    <div class="h2h-modal-overlay" id="h2hModal" onclick="if(event.target===this) closeH2HModal()">
-        <div class="h2h-modal">
-            <div class="h2h-modal-title" id="h2hModalTitle">Head to Head</div>
-            <div class="h2h-teams-row">
-                <div class="h2h-team-col">
-                    <img id="h2hImgA" src="" alt="">
-                    <div class="h2h-team-name" id="h2hNameA"></div>
+<!-- ═══════════════ H2H DETAILS MODAL ═══════════════ -->
+<div class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center px-4" id="h2hModal" onclick="if(event.target===this||event.target.classList.contains('bg-brand-darker/90')) closeH2HModal()">
+    <div class="fixed inset-0 bg-brand-darker/90 backdrop-blur-sm" onclick="closeH2HModal()"></div>
+    <div class="modal-inner relative bg-brand-muted border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-7">
+        <div class="text-center text-sm font-bold mb-5 text-brand-text uppercase tracking-wider" id="h2hModalTitle">Head to Head</div>
+        <!-- Team Logos + Big Score -->
+        <div class="flex items-center justify-around mb-6">
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-full bg-white/5 border-2 border-brand-accent/30 flex items-center justify-center p-1.5 overflow-hidden">
+                    <img id="h2hImgA" class="w-full h-full object-contain" src="" alt="">
                 </div>
-                <div class="h2h-score-big" id="h2hScoreBig"></div>
-                <div class="h2h-team-col">
-                    <img id="h2hImgB" src="" alt="">
-                    <div class="h2h-team-name" id="h2hNameB"></div>
+                <span class="font-bold text-sm" id="h2hNameA"></span>
+            </div>
+            <div class="text-3xl font-black text-brand-accent" id="h2hScoreBig"></div>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center p-1.5 overflow-hidden">
+                    <img id="h2hImgB" class="w-full h-full object-contain" src="" alt="">
                 </div>
+                <span class="font-bold text-sm" id="h2hNameB"></span>
             </div>
-            <div class="h2h-stat-grid">
-                <div class="label">Home Wins</div>
-                <div></div>
-                <div class="label">Home Wins</div>
-                <div class="val val-left" id="h2hHomeA">0</div>
-                <div class="divider">|</div>
-                <div class="val val-right" id="h2hHomeB">0</div>
-                <div class="label">Away Wins</div>
-                <div></div>
-                <div class="label">Away Wins</div>
-                <div class="val val-left" id="h2hAwayA">0</div>
-                <div class="divider">|</div>
-                <div class="val val-right" id="h2hAwayB">0</div>
-                <div class="label">Total Wins</div>
-                <div></div>
-                <div class="label">Total Wins</div>
-                <div class="val val-left" id="h2hTotalA" style="color: var(--primary);">0</div>
-                <div class="divider">|</div>
-                <div class="val val-right" id="h2hTotalB" style="color: var(--primary);">0</div>
-            </div>
-            <div class="h2h-total-row" id="h2hTotalMatches"></div>
-            <button class="h2h-close-btn" onclick="closeH2HModal()">Close</button>
         </div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-y-3 text-center text-sm border-t border-white/5 pt-4">
+            <div class="font-bold" id="h2hHomeA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Home Wins</div>
+            <div class="font-bold" id="h2hHomeB">0</div>
+            <div class="font-bold" id="h2hAwayA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Away Wins</div>
+            <div class="font-bold" id="h2hAwayB">0</div>
+            <div class="font-bold text-brand-accent" id="h2hTotalA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Total Wins</div>
+            <div class="font-bold text-brand-accent" id="h2hTotalB">0</div>
+        </div>
+        <div class="text-center text-brand-text text-xs mt-4 pt-3 border-t border-white/5" id="h2hTotalMatches"></div>
+        <button class="w-full mt-4 bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-3 rounded-xl transition-all text-sm" onclick="closeH2HModal()">Close</button>
     </div>
+</div>
 
-    <script>
-        // GLOBALS
-        let currentUser = localStorage.getItem('ipl_username') || null;
-        let scheduleData = [];
-        let myPicks = [];
-        let h2hData = {};
-        let activeFilter = 'All';
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+    // ─── GLOBALS ──────────────────────────
+    let currentUser = localStorage.getItem('ipl_username') || null;
+    let scheduleData = [];
+    let myPicks = [];
+    let h2hData = {};
+    let activeFilter = 'All';
 
-        const TEAM_ABBR = {
-            'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
-            'Sunrisers Hyderabad': 'SRH', 'Royal Challengers Bangalore': 'RCB', 'Gujarat Titans': 'GT',
-            'Rajasthan Royals': 'RR', 'Delhi Capitals': 'DC', 'Punjab Kings': 'PBKS', 'Lucknow Super Giants': 'LSG'
-        };
+    const TEAM_ABBR = {
+        'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
+        'Sunrisers Hyderabad': 'SRH', 'Royal Challengers Bangalore': 'RCB', 'Gujarat Titans': 'GT',
+        'Rajasthan Royals': 'RR', 'Delhi Capitals': 'DC', 'Punjab Kings': 'PBKS', 'Lucknow Super Giants': 'LSG'
+    };
 
-        // INIT
-        async function init() {
-            initTheme();
-            if (!currentUser) promptLogin();
-            else document.getElementById('userChip').textContent = currentUser;
+    const TEAM_COLORS = {
+        MI: 'border-blue-500', CSK: 'border-yellow-400', KKR: 'border-purple-500',
+        SRH: 'border-orange-500', RCB: 'border-red-600', GT: 'border-teal-400',
+        RR: 'border-pink-400', DC: 'border-blue-600', PBKS: 'border-red-500', LSG: 'border-cyan-400'
+    };
 
-            await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
-            renderUpcomingMatches();
-            setupTeamFilter();
-            setInterval(updateCountdowns, 1000);
+    const TEAM_BG = {
+        MI: 'bg-blue-900/30', CSK: 'bg-yellow-900/30', KKR: 'bg-purple-900/30',
+        SRH: 'bg-orange-900/30', RCB: 'bg-red-900/30', GT: 'bg-teal-900/30',
+        RR: 'bg-pink-900/30', DC: 'bg-blue-800/30', PBKS: 'bg-red-800/30', LSG: 'bg-cyan-900/30'
+    };
 
-            // Auto refresh results every 60s
-            setInterval(() => {
-                fetchSchedule().then(renderUpcomingMatches);
-                if (currentUser) fetchMyPicks();
-            }, 60000);
-        }
+    // ─── INIT ──────────────────────────
+    async function init() {
+        if (!currentUser) promptLogin();
+        else document.getElementById('userChip').textContent = currentUser;
 
-        // DATA FETCHING
-        const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
-        const MASTER_KEY = '$2a$10$hkFvOh3x6zhiDHHRVZteKOec/i2JSy.JXIX4qMTyYx4BvIs2m8.Fu';
+        await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
+        renderUpcomingMatches();
+        setupTeamFilter();
+        setInterval(updateCountdowns, 1000);
 
-        async function fetchSchedule() {
-            try {
-                // Now fetching the static file directly since we're on GH Pages
-                const res = await fetch('./schedule.json');
-                const data = await res.json();
-                scheduleData = data.matches;
-            } catch (err) {
-                console.error(err);
-            }
-        }
+        setInterval(() => {
+            fetchSchedule().then(renderUpcomingMatches);
+            if (currentUser) fetchMyPicks();
+        }, 60000);
+    }
 
-        async function fetchMyPicks() {
-            if (!currentUser) return;
-            try {
-                const res = await fetch(JSONBIN_URL, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
+    // ─── DATA FETCHING ──────────────────────────
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
+    const MASTER_KEY = '$2a$10$hkFvOh3x6zhiDHHRVZteKOec/i2JSy.JXIX4qMTyYx4BvIs2m8.Fu';
+
+    async function fetchSchedule() {
+        try {
+            const res = await fetch('./schedule.json');
+            const data = await res.json();
+            scheduleData = data.matches;
+        } catch (err) { console.error(err); }
+    }
+
+    async function fetchMyPicks() {
+        if (!currentUser) return;
+        try {
+            const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const data = await res.json();
+            const allPicks = data.record.picks || [];
+            myPicks = allPicks.filter(p => p.userName === currentUser);
+        } catch (err) { console.error(err); }
+    }
+
+    async function fetchH2H() {
+        try {
+            const res = await fetch('./h2h.json');
+            const data = await res.json();
+            h2hData = data.records || {};
+        } catch (err) { console.error(err); }
+    }
+
+    // ─── NAVIGATION ──────────────────────────
+    function switchView(viewName) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${viewName}`).classList.add('active');
+
+        document.querySelectorAll('.bottom-nav-item').forEach(el => {
+            el.classList.remove('text-brand-accent');
+            el.classList.add('text-brand-text');
+        });
+        const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
+        const navItems = document.querySelectorAll('.bottom-nav-item');
+        navItems[idx].classList.remove('text-brand-text');
+        navItems[idx].classList.add('text-brand-accent');
+
+        if (viewName === 'leaderboard') fetchLeaderboard();
+        if (viewName === 'results') renderMyResults();
+    }
+
+    function setupTeamFilter() {
+        document.querySelectorAll('.team-badge').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.team-badge').forEach(b => {
+                    b.classList.remove('bg-brand-accent', 'text-brand-darker', 'font-bold', 'active');
+                    b.classList.add('bg-brand-muted', 'border', 'border-white/10', 'text-brand-text');
                 });
-                const data = await res.json();
-                const allPicks = data.record.picks || [];
-                myPicks = allPicks.filter(p => p.userName === currentUser);
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        async function fetchH2H() {
-            try {
-                // Now fetching the static file directly
-                const res = await fetch('./h2h.json');
-                const data = await res.json();
-                h2hData = data.records || {};
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        // THEME
-        function initTheme() {
-            const saved = localStorage.getItem('ipl_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', saved);
-            document.getElementById('themeToggle').textContent = saved === 'dark' ? '☀️' : '🌙';
-        }
-
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('ipl_theme', target);
-            document.getElementById('themeToggle').textContent = target === 'dark' ? '☀️' : '🌙';
-        }
-
-        // NAVIGATION
-        function switchView(viewName) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${viewName}`).classList.add('active');
-
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
-
-            const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
-            document.querySelectorAll('.nav-item')[idx].classList.add('active');
-            document.querySelectorAll('.bottom-nav-item')[idx].classList.add('active');
-
-            if (viewName === 'leaderboard') fetchLeaderboard();
-            if (viewName === 'results') renderMyResults();
-        }
-
-        function setupTeamFilter() {
-            document.querySelectorAll('.team-badge').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.team-badge').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    activeFilter = e.target.dataset.team;
-                    renderUpcomingMatches();
-                });
+                e.currentTarget.classList.remove('bg-brand-muted', 'border-white/10', 'text-brand-text');
+                e.currentTarget.classList.add('bg-brand-accent', 'text-brand-darker', 'font-bold', 'active');
+                activeFilter = e.currentTarget.dataset.team;
+                renderUpcomingMatches();
             });
-        }
+        });
+    }
 
-        // LOGIN
-        function promptLogin() {
-            document.getElementById('loginModal').classList.add('active');
-            document.getElementById('loginInput').value = currentUser || '';
-            document.getElementById('loginInput').focus();
-        }
+    // ─── LOGIN ──────────────────────────
+    function promptLogin() {
+        document.getElementById('loginModal').classList.add('active');
+        document.getElementById('loginInput').value = currentUser || '';
+        setTimeout(() => document.getElementById('loginInput').focus(), 100);
+    }
 
-        async function saveName() {
-            const name = document.getElementById('loginInput').value.trim();
-            if (!name) return;
-            currentUser = name;
-            localStorage.setItem('ipl_username', name);
-            document.getElementById('userChip').textContent = name;
-            document.getElementById('loginModal').classList.remove('active');
-            await fetchMyPicks();
-            renderUpcomingMatches();
-            if (document.getElementById('view-results').classList.contains('active')) renderMyResults();
-        }
+    async function saveName() {
+        const name = document.getElementById('loginInput').value.trim();
+        if (!name) return;
+        currentUser = name;
+        localStorage.setItem('ipl_username', name);
+        document.getElementById('userChip').textContent = name;
+        document.getElementById('loginModal').classList.remove('active');
+        await fetchMyPicks();
+        renderUpcomingMatches();
+        if (document.getElementById('view-results').classList.contains('active')) renderMyResults();
+    }
 
-        // API FETCH
+    // ─── LEADERBOARD ──────────────────────────
+    async function fetchLeaderboard() {
+        const tbody = document.getElementById('leaderboardBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-brand-text">Loading...</td></tr>';
 
-        async function fetchLeaderboard() {
-            const tbody = document.getElementById('leaderboardBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+        try {
+            const schedRes = await fetch('./schedule.json');
+            const schedData = await schedRes.json();
+            const allMatches = schedData.matches;
 
-            try {
-                // Fetch the entire static schedule locally
-                const schedRes = await fetch('./schedule.json');
-                const schedData = await schedRes.json();
-                const allMatches = schedData.matches;
+            const resultsMap = {};
+            allMatches.forEach(m => { if (m.winner !== null) resultsMap[m.id] = m.winner; });
 
-                // Construct results map
-                const resultsMap = {};
-                allMatches.forEach(m => {
-                    if (m.winner !== null) {
-                        resultsMap[m.id] = m.winner;
-                    }
-                });
+            const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const binData = await res.json();
+            const allPicks = binData.record.picks || [];
 
-                // Fetch ALL users' picks directly from JSONBin to calculate leaderboard locally
-                const res = await fetch(JSONBIN_URL, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
-                });
-                const binData = await res.json();
-                const allPicks = binData.record.picks || [];
-
-                // Replicate what the old backend did
-                const userStats = {};
-                allPicks.forEach(p => {
-                    if (!userStats[p.userName]) {
-                        userStats[p.userName] = { name: p.userName, correct: 0, total: 0 };
-                    }
-
-                    if (resultsMap[p.matchId] !== undefined) {
-                        userStats[p.userName].total++;
-                        if (p.team === resultsMap[p.matchId]) {
-                            userStats[p.userName].correct++;
-                        }
-                    }
-                });
-
-                const leaderboard = Object.values(userStats).map(stat => {
-                    const scorePct = stat.total > 0 ? ((stat.correct / stat.total) * 100).toFixed(1) : "0.0";
-                    return { ...stat, scorePct: parseFloat(scorePct) };
-                });
-
-                leaderboard.sort((a, b) => {
-                    if (b.correct !== a.correct) return b.correct - a.correct;
-                    return b.scorePct - a.scorePct;
-                });
-
-                leaderboard.forEach((user, index) => { user.rank = index + 1; });
-
-                if (leaderboard.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No data yet</td></tr>';
-                    return;
+            const userStats = {};
+            allPicks.forEach(p => {
+                if (!userStats[p.userName]) userStats[p.userName] = { name: p.userName, correct: 0, total: 0 };
+                if (resultsMap[p.matchId] !== undefined) {
+                    userStats[p.userName].total++;
+                    if (p.team === resultsMap[p.matchId]) userStats[p.userName].correct++;
                 }
+            });
 
-                tbody.innerHTML = leaderboard.map(l => `
-                    <tr>
-                        <td style="font-weight:700;">#${l.rank}</td>
-                        <td>${l.name} ${l.name === currentUser ? '<span class="you-chip">YOU</span>' : ''}</td>
-                        <td class="text-green">${l.correct}</td>
-                        <td class="text-gray">${l.total}</td>
-                        <td style="font-weight:600;">${l.scorePct}%</td>
-                    </tr>
-                `).join('');
+            const leaderboard = Object.values(userStats).map(stat => {
+                const scorePct = stat.total > 0 ? ((stat.correct / stat.total) * 100).toFixed(1) : "0.0";
+                return { ...stat, scorePct: parseFloat(scorePct) };
+            });
 
-            } catch (err) {
-                console.error(err);
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--status-locked);">Failed to load leaderboard</td></tr>';
-            }
-        }
+            leaderboard.sort((a, b) => b.correct !== a.correct ? b.correct - a.correct : b.scorePct - a.scorePct);
+            leaderboard.forEach((user, index) => { user.rank = index + 1; });
 
-        function getH2HString(tA, tB) {
-            // Calculate total wins for each team by checking both directions
-            let winsA = 0, winsB = 0;
-            
-            // tA's wins against tB (home + away)
-            if (h2hData[tA] && h2hData[tA][tB]) {
-                winsA += (h2hData[tA][tB].home || 0) + (h2hData[tA][tB].away || 0);
-            }
-            // tB's wins against tA (home + away)
-            if (h2hData[tB] && h2hData[tB][tA]) {
-                winsB += (h2hData[tB][tA].home || 0) + (h2hData[tB][tA].away || 0);
-            }
-
-            if (winsA === 0 && winsB === 0) return 'No H2H data';
-
-            const abbrA = TEAM_ABBR[tA] || tA;
-            const abbrB = TEAM_ABBR[tB] || tB;
-            return `${abbrA} ${winsA} - ${winsB} ${abbrB}`;
-        }
-
-        function showH2HModal(teamA, teamB) {
-            const abbrA = TEAM_ABBR[teamA] || teamA;
-            const abbrB = TEAM_ABBR[teamB] || teamB;
-
-            // Team A stats
-            const aVsB = (h2hData[teamA] && h2hData[teamA][teamB]) ? h2hData[teamA][teamB] : { home: 0, away: 0 };
-            // Team B stats  
-            const bVsA = (h2hData[teamB] && h2hData[teamB][teamA]) ? h2hData[teamB][teamA] : { home: 0, away: 0 };
-
-            const homeA = aVsB.home || 0;
-            const awayA = aVsB.away || 0;
-            const totalA = homeA + awayA;
-
-            const homeB = bVsA.home || 0;
-            const awayB = bVsA.away || 0;
-            const totalB = homeB + awayB;
-
-            const totalMatches = totalA + totalB;
-
-            document.getElementById('h2hModalTitle').textContent = `${abbrA} vs ${abbrB} — Head to Head`;
-            document.getElementById('h2hImgA').src = `/images_final/${abbrA}.png`;
-            document.getElementById('h2hImgA').alt = abbrA;
-            document.getElementById('h2hImgB').src = `/images_final/${abbrB}.png`;
-            document.getElementById('h2hImgB').alt = abbrB;
-            document.getElementById('h2hNameA').textContent = abbrA;
-            document.getElementById('h2hNameB').textContent = abbrB;
-            document.getElementById('h2hScoreBig').textContent = `${totalA} - ${totalB}`;
-            document.getElementById('h2hHomeA').textContent = homeA;
-            document.getElementById('h2hHomeB').textContent = homeB;
-            document.getElementById('h2hAwayA').textContent = awayA;
-            document.getElementById('h2hAwayB').textContent = awayB;
-            document.getElementById('h2hTotalA').textContent = totalA;
-            document.getElementById('h2hTotalB').textContent = totalB;
-            document.getElementById('h2hTotalMatches').innerHTML = `Total Matches Played: <strong>${totalMatches}</strong>`;
-
-            document.getElementById('h2hModal').classList.add('active');
-        }
-
-        function closeH2HModal() {
-            document.getElementById('h2hModal').classList.remove('active');
-        }
-
-        // RENDER UPCOMING
-        function renderUpcomingMatches() {
-            const container = document.getElementById('upcomingMatchesContainer');
-            container.innerHTML = '';
-
-            const now = Date.now();
-            const futureMatches = scheduleData.filter(m => m.winner === null);
-
-            const filtered = activeFilter === 'All'
-                ? futureMatches
-                : futureMatches.filter(m => TEAM_ABBR[m.teamA] === activeFilter || TEAM_ABBR[m.teamB] === activeFilter);
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 48px; color:var(--text-muted); background:var(--bg-surface); border-radius:var(--radius-lg);">No matches found.</div>`;
+            if (leaderboard.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-brand-text">No data yet. Start predicting!</td></tr>';
                 return;
             }
 
-            filtered.forEach(m => {
-                const matchTime = new Date(m.startTimeISO).getTime();
-                const isLocked = now >= matchTime - 30 * 60 * 1000;
+            tbody.innerHTML = leaderboard.map(l => `
+                <tr>
+                    <td class="font-bold text-brand-accent">#${l.rank}</td>
+                    <td class="font-medium">${l.name} ${l.name === currentUser ? '<span class="ml-1.5 text-[10px] bg-brand-accent text-brand-darker px-2 py-0.5 rounded-full font-bold">YOU</span>' : ''}</td>
+                    <td class="text-green-400 font-semibold">${l.correct}</td>
+                    <td class="text-brand-text">${l.total}</td>
+                    <td class="font-semibold">${l.scorePct}%</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-red-400">Failed to load leaderboard</td></tr>';
+        }
+    }
 
-                const existingPick = myPicks.find(p => p.matchId === m.id);
-                const pickValue = existingPick ? existingPick.team : '';
+    // ─── H2H ──────────────────────────
+    function getH2HString(tA, tB) {
+        let winsA = 0, winsB = 0;
+        if (h2hData[tA] && h2hData[tA][tB]) winsA += (h2hData[tA][tB].home || 0) + (h2hData[tA][tB].away || 0);
+        if (h2hData[tB] && h2hData[tB][tA]) winsB += (h2hData[tB][tA].home || 0) + (h2hData[tB][tA].away || 0);
+        if (winsA === 0 && winsB === 0) return 'No H2H data';
+        const abbrA = TEAM_ABBR[tA] || tA;
+        const abbrB = TEAM_ABBR[tB] || tB;
+        return `${abbrA} ${winsA} - ${winsB} ${abbrB}`;
+    }
 
-                const abbrA = TEAM_ABBR[m.teamA] || m.teamA;
-                const abbrB = TEAM_ABBR[m.teamB] || m.teamB;
+    function showH2HModal(teamA, teamB) {
+        const abbrA = TEAM_ABBR[teamA] || teamA;
+        const abbrB = TEAM_ABBR[teamB] || teamB;
+        const aVsB = (h2hData[teamA] && h2hData[teamA][teamB]) ? h2hData[teamA][teamB] : { home: 0, away: 0 };
+        const bVsA = (h2hData[teamB] && h2hData[teamB][teamA]) ? h2hData[teamB][teamA] : { home: 0, away: 0 };
+        const homeA = aVsB.home || 0, awayA = aVsB.away || 0, totalA = homeA + awayA;
+        const homeB = bVsA.home || 0, awayB = bVsA.away || 0, totalB = homeB + awayB;
+        const totalMatches = totalA + totalB;
 
-                const h2hTooltip = getH2HString(m.teamA, m.teamB);
+        document.getElementById('h2hModalTitle').textContent = `${abbrA} vs ${abbrB} — Head to Head`;
+        document.getElementById('h2hImgA').src = `./images_final/${abbrA}.png`;
+        document.getElementById('h2hImgB').src = `./images_final/${abbrB}.png`;
+        document.getElementById('h2hNameA').textContent = abbrA;
+        document.getElementById('h2hNameB').textContent = abbrB;
+        document.getElementById('h2hScoreBig').textContent = `${totalA} - ${totalB}`;
+        document.getElementById('h2hHomeA').textContent = homeA;
+        document.getElementById('h2hHomeB').textContent = homeB;
+        document.getElementById('h2hAwayA').textContent = awayA;
+        document.getElementById('h2hAwayB').textContent = awayB;
+        document.getElementById('h2hTotalA').textContent = totalA;
+        document.getElementById('h2hTotalB').textContent = totalB;
+        document.getElementById('h2hTotalMatches').innerHTML = `Total Matches Played: <strong class="text-white">${totalMatches}</strong>`;
+        document.getElementById('h2hModal').classList.add('active');
+    }
 
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                card.innerHTML = `
-                    <div class="match-header">
-                        <div>${m.dateLabel} • ${m.venue}</div>
-                        <div class="status-chip ${isLocked ? 'locked' : 'open'}">${isLocked ? '🔒 Locked' : 'Open'}</div>
-                    </div>
-                    <div class="match-teams">
-                        <div class="team-info" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
-                            <div class="team-logo"><img src="/images_final/${abbrA}.png" alt="${abbrA}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
-                            <div class="team-name">${abbrA}</div>
-                            <div class="tooltip">${h2hTooltip}</div>
+    function closeH2HModal() { document.getElementById('h2hModal').classList.remove('active'); }
+
+    // ─── RENDER UPCOMING MATCHES ──────────────────────────
+    function renderUpcomingMatches() {
+        const container = document.getElementById('upcomingMatchesContainer');
+        container.innerHTML = '';
+
+        const now = Date.now();
+        const futureMatches = scheduleData.filter(m => m.winner === null);
+        const filtered = activeFilter === 'All'
+            ? futureMatches
+            : futureMatches.filter(m => TEAM_ABBR[m.teamA] === activeFilter || TEAM_ABBR[m.teamB] === activeFilter);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-12 text-brand-text bg-brand-muted rounded-2xl border border-white/10">No matches found.</div>`;
+            return;
+        }
+
+        filtered.forEach(m => {
+            const matchTime = new Date(m.startTimeISO).getTime();
+            const isLocked = now >= matchTime - 30 * 60 * 1000;
+            const existingPick = myPicks.find(p => p.matchId === m.id);
+            const pickValue = existingPick ? existingPick.team : '';
+            const abbrA = TEAM_ABBR[m.teamA] || m.teamA;
+            const abbrB = TEAM_ABBR[m.teamB] || m.teamB;
+            const h2hTooltip = getH2HString(m.teamA, m.teamB);
+            const colorA = TEAM_COLORS[abbrA] || 'border-white/20';
+            const colorB = TEAM_COLORS[abbrB] || 'border-white/20';
+            const bgA = TEAM_BG[abbrA] || 'bg-white/5';
+            const bgB = TEAM_BG[abbrB] || 'bg-white/5';
+            const glowA = pickValue === m.teamA ? 'selected-glow' : '';
+            const glowB = pickValue === m.teamB ? 'selected-glow' : '';
+
+            const card = document.createElement('article');
+            card.className = 'bg-brand-muted rounded-2xl p-5 shadow-xl border border-white/10 transition-transform active:scale-[0.98]';
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] uppercase tracking-widest text-brand-accent font-bold">${m.dateLabel}</span>
+                    <span class="text-[10px] text-brand-text bg-white/5 px-2.5 py-1 rounded">${m.venue}</span>
+                </div>
+                <div class="flex items-center justify-between mb-5 relative">
+                    <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                        <div class="relative">
+                            <div class="w-16 h-16 ${bgA} rounded-full flex items-center justify-center p-2 border-2 ${colorA} ${glowA}">
+                                <img alt="${abbrA}" class="w-full h-full object-contain" src="./images_final/${abbrA}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}';">
+                            </div>
+                            <div class="absolute -top-1 -right-1 bg-brand-muted border border-white/20 rounded-full p-0.5 shadow-lg">
+                                <span class="material-symbols-outlined text-[14px] text-brand-text">info</span>
+                            </div>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-10 w-36 bg-brand-darker border border-white/20 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
+                                <p class="text-[11px] font-bold">${h2hTooltip}</p>
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
+                            </div>
                         </div>
-                        <div class="vs">VS</div>
-                        <div class="team-info" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
-                            <div class="team-logo"><img src="/images_final/${abbrB}.png" alt="${abbrB}" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}'; this.parentElement.style.backgroundColor='#eee'; this.parentElement.style.color='#000'; this.parentElement.style.fontWeight='bold'; this.parentElement.style.fontSize='0.8rem';"></div>
-                            <div class="team-name">${abbrB}</div>
-                            <div class="tooltip">${h2hTooltip}</div>
+                        <span class="font-bold text-sm">${abbrA}</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-xl font-black italic text-white/10">VS</span>
+                        <div class="countdown text-[10px] text-brand-accent font-mono mt-1" data-time="${m.startTimeISO}">...</div>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                        <div class="relative">
+                            <div class="w-16 h-16 ${bgB} rounded-full flex items-center justify-center p-2 border-2 ${colorB} ${glowB}">
+                                <img alt="${abbrB}" class="w-full h-full object-contain" src="./images_final/${abbrB}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}';">
+                            </div>
+                            <div class="absolute -top-1 -right-1 bg-brand-muted border border-white/20 rounded-full p-0.5 shadow-lg">
+                                <span class="material-symbols-outlined text-[14px] text-brand-text">info</span>
+                            </div>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-10 w-36 bg-brand-darker border border-white/20 rounded-lg py-2 px-3 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[9px] uppercase tracking-wider text-brand-text mb-1">Head to Head</p>
+                                <p class="text-[11px] font-bold">${h2hTooltip}</p>
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-brand-darker"></div>
+                            </div>
                         </div>
+                        <span class="font-bold text-sm">${abbrB}</span>
                     </div>
-                    <div class="countdown" data-time="${m.startTimeISO}">...</div>
-                    <div class="pick-action">
-                        <select class="pick-dropdown" id="pick-${m.id}" ${isLocked ? 'disabled' : ''}>
-                            <option value="">Select winner...</option>
-                            <option value="${m.teamA}" ${pickValue === m.teamA ? 'selected' : ''}>${m.teamA}</option>
-                            <option value="${m.teamB}" ${pickValue === m.teamB ? 'selected' : ''}>${m.teamB}</option>
-                        </select>
-                        <button class="btn-submit" onclick="submitPick('${m.id}')" ${isLocked ? 'disabled' : ''}>
-                            ${existingPick ? 'Update' : 'Submit'}
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            updateCountdowns();
-        }
+                </div>
+                <div class="pt-4 border-t border-white/5">
+                    ${existingPick ? `
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[10px] text-brand-text uppercase tracking-wider font-semibold">Your Prediction</p>
+                            <p class="text-[10px] text-brand-text/60">${isLocked ? '🔒 Locked' : 'Update until kickoff'}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="${pickValue === m.teamA ? 'bg-brand-accent text-brand-darker border-brand-accent' : 'bg-white/5 hover:bg-brand-accent/20 border-white/10 hover:border-brand-accent text-brand-text'} border py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-1 transition-all" onclick="submitPickDirect('${m.id}', '${m.teamA}')" ${isLocked ? 'disabled' : ''}>
+                                ${pickValue === m.teamA ? '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' : ''} ${abbrA}
+                            </button>
+                            <button class="${pickValue === m.teamB ? 'bg-brand-accent text-brand-darker border-brand-accent' : 'bg-white/5 hover:bg-brand-accent/20 border-white/10 hover:border-brand-accent text-brand-text'} border py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-1 transition-all" onclick="submitPickDirect('${m.id}', '${m.teamB}')" ${isLocked ? 'disabled' : ''}>
+                                ${pickValue === m.teamB ? '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' : ''} ${abbrB}
+                            </button>
+                        </div>
+                    ` : `
+                        <p class="text-[11px] text-center text-brand-text mb-3 uppercase tracking-wider font-semibold">${isLocked ? '🔒 Predictions Locked' : 'Who will win?'}</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="bg-white/5 hover:bg-brand-accent/20 border border-white/10 hover:border-brand-accent py-2.5 rounded-xl font-medium text-sm transition-all" onclick="submitPickDirect('${m.id}', '${m.teamA}')" ${isLocked ? 'disabled' : ''}>Predict ${abbrA}</button>
+                            <button class="bg-white/5 hover:bg-brand-accent/20 border border-white/10 hover:border-brand-accent py-2.5 rounded-xl font-medium text-sm transition-all" onclick="submitPickDirect('${m.id}', '${m.teamB}')" ${isLocked ? 'disabled' : ''}>Predict ${abbrB}</button>
+                        </div>
+                    `}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        updateCountdowns();
+    }
 
-        function getMatchWinner(matchId) {
-            const match = scheduleData.find(m => m.id === matchId);
-            return match ? match.winner : null;
-        }
+    // ─── SUBMIT PICK (direct button) ──────────────────────────
+    async function submitPickDirect(matchId, team) {
+        if (!currentUser) { promptLogin(); return; }
 
-        async function submitPick(matchId) {
-            if (!currentUser) {
-                promptLogin();
-                return;
-            }
+        try {
+            const currentRes = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const currentData = await currentRes.json();
+            let allPicks = currentData.record.picks || [];
+            allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
+            allPicks.push({ userName: currentUser, matchId, team, frozen: true, timestamp: new Date().toISOString() });
 
-            const selectEl = document.getElementById(`pick-${matchId}`);
-            const team = selectEl.value;
-            if (!team) {
-                alert('Please select a team');
-                return;
-            }
-
-            const btn = selectEl.nextElementSibling;
-            const originalText = btn.textContent;
-            btn.textContent = 'Saving...';
-            btn.disabled = true;
-
-            try {
-                // 1. Fetch current picks from JSONBin
-                const currentRes = await fetch(JSONBIN_URL, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
-                });
-                const currentData = await currentRes.json();
-                let allPicks = currentData.record.picks || [];
-
-                // 2. Remove any existing pick for this match by this user
-                allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
-
-                // 3. Add the new pick
-                const newPick = {
-                    userName: currentUser,
-                    matchId: matchId,
-                    team: team,
-                    frozen: true,
-                    timestamp: new Date().toISOString()
-                };
-                allPicks.push(newPick);
-
-                // 4. Save back to JSONBin
-                const saveRes = await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY
-                    },
-                    body: JSON.stringify({ picks: allPicks })
-                });
-
-                if (saveRes.ok) {
-                    await fetchMyPicks();
-                    const existingPick = myPicks.find(p => p.matchId === matchId);
-                    btn.textContent = 'Update';
-                    btn.disabled = false;
-                    // Provide a nice visual feedback (green button briefly)
-                    btn.style.backgroundColor = '#10b981';
-                    setTimeout(() => btn.style.backgroundColor = '', 1000);
-                } else {
-                    const err = await saveRes.json();
-                    alert(err.message || 'Failed to submit pick.');
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                console.error(e);
-                alert('Network error.');
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        function updateCountdowns() {
-            const now = Date.now();
-            document.querySelectorAll('.countdown').forEach(el => {
-                const matchTime = new Date(el.dataset.time).getTime();
-                const cutoff = matchTime - (30 * 60 * 1000);
-
-                const diff = cutoff - now;
-                if (diff <= 0) {
-                    el.textContent = "00:00:00";
-                    // Change status if it's strictly now locked 
-                    // This relies on re-render to update the dropdowns if it just ticked over, 
-                    // but visual countdown stops at 0.
-                    return;
-                }
-
-                // Format diff
-                const totalMins = Math.floor(diff / 60000);
-                if (totalMins > 24 * 60) {
-                    const days = Math.floor(totalMins / (24 * 60));
-                    const hours = Math.floor((totalMins % (24 * 60)) / 60);
-                    el.textContent = `${days}d ${hours}h`;
-                } else {
-                    const h = Math.floor(totalMins / 60).toString().padStart(2, '0');
-                    const m = (totalMins % 60).toString().padStart(2, '0');
-                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    el.textContent = `${h}:${m}:${s}`;
-                }
-            });
-        }
-
-        // RENDER RESULTS
-        function renderMyResults() {
-            const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '';
-
-            if (!currentUser) return;
-
-            const pastMatches = scheduleData.filter(m => m.winner !== null || new Date(m.startTimeISO).getTime() - 30 * 60 * 1000 <= Date.now());
-
-            let correct = 0, wrong = 0, total = 0;
-
-            const rows = pastMatches.map(m => {
-                const myPick = myPicks.find(p => p.matchId === m.id);
-                const pickText = myPick ? myPick.team : '-';
-
-                let statusMsg = '<span class="text-gray">Pending</span>';
-                if (m.winner !== null) {
-                    if (myPick) total++;
-
-                    if (myPick && myPick.team === m.winner) {
-                        correct++;
-                        statusMsg = `<span class="text-green">Correct ✓ (${m.winner})</span>`;
-                    } else if (myPick && myPick.team !== m.winner) {
-                        wrong++;
-                        statusMsg = `<span class="text-red">Wrong ✗ (${m.winner})</span>`;
-                    } else {
-                        statusMsg = `<span>Winner: ${m.winner}</span>`;
-                    }
-                }
-
-                return `
-                    <tr>
-                        <td style="white-space:nowrap; font-size: 0.85rem; color:var(--text-muted);">${m.dateLabel}</td>
-                        <td style="font-weight:500;">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
-                        <td style="font-weight:600;">${TEAM_ABBR[pickText] || pickText}</td>
-                        <td>${statusMsg}</td>
-                    </tr>
-                `;
+            const saveRes = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                body: JSON.stringify({ picks: allPicks })
             });
 
-            if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 24px; color:var(--text-muted);">No recorded past matches.</td></tr>';
+            if (saveRes.ok) {
+                await fetchMyPicks();
+                renderUpcomingMatches();
             } else {
-                tbody.innerHTML = rows.reverse().join('');
+                alert('Failed to submit pick.');
             }
+        } catch (e) {
+            console.error(e);
+            alert('Network error.');
+        }
+    }
 
-            // Make sure these elements exist before trying to set their textContent
-            const elCorrect = document.getElementById('resCorrect');
-            const elWrong = document.getElementById('resWrong');
-            const elAcc = document.getElementById('resAcc');
+    // Keep old submitPick for compatibility
+    async function submitPick(matchId) {
+        if (!currentUser) { promptLogin(); return; }
+        const selectEl = document.getElementById(`pick-${matchId}`);
+        if (!selectEl) return;
+        const team = selectEl.value;
+        if (!team) { alert('Please select a team'); return; }
+        await submitPickDirect(matchId, team);
+    }
 
-            if (elCorrect) elCorrect.textContent = correct;
-            if (elWrong) elWrong.textContent = wrong;
-            const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
-            if (elAcc) elAcc.textContent = acc + '%';
+    // ─── COUNTDOWN TIMER ──────────────────────────
+    function updateCountdowns() {
+        const now = Date.now();
+        document.querySelectorAll('.countdown').forEach(el => {
+            const matchTime = new Date(el.dataset.time).getTime();
+            const cutoff = matchTime - (30 * 60 * 1000);
+            const diff = cutoff - now;
+            if (diff <= 0) { el.textContent = "00:00:00"; return; }
+            const totalMins = Math.floor(diff / 60000);
+            if (totalMins > 24 * 60) {
+                const days = Math.floor(totalMins / (24 * 60));
+                const hours = Math.floor((totalMins % (24 * 60)) / 60);
+                el.textContent = `${days}d ${hours}h`;
+            } else {
+                const h = Math.floor(totalMins / 60).toString().padStart(2, '0');
+                const m = (totalMins % 60).toString().padStart(2, '0');
+                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                el.textContent = `${h}:${m}:${s}`;
+            }
+        });
+    }
+
+    // ─── RENDER MY RESULTS ──────────────────────────
+    function renderMyResults() {
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '';
+        if (!currentUser) return;
+
+        const pastMatches = scheduleData.filter(m => m.winner !== null || new Date(m.startTimeISO).getTime() - 30 * 60 * 1000 <= Date.now());
+        let correct = 0, wrong = 0, total = 0;
+
+        const rows = pastMatches.map(m => {
+            const myPick = myPicks.find(p => p.matchId === m.id);
+            const pickText = myPick ? myPick.team : '-';
+            let statusMsg = '<span class="text-brand-text">Pending</span>';
+            if (m.winner !== null) {
+                if (myPick) total++;
+                if (myPick && myPick.team === m.winner) {
+                    correct++;
+                    statusMsg = `<span class="text-green-400 font-semibold">Correct ✓</span>`;
+                } else if (myPick && myPick.team !== m.winner) {
+                    wrong++;
+                    statusMsg = `<span class="text-red-400 font-semibold">Wrong ✗</span>`;
+                } else {
+                    statusMsg = `<span class="text-brand-text">${TEAM_ABBR[m.winner] || m.winner}</span>`;
+                }
+            }
+            return `
+                <tr>
+                    <td class="text-brand-text text-xs whitespace-nowrap">${m.dateLabel}</td>
+                    <td class="font-medium text-sm">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
+                    <td class="font-semibold text-sm">${TEAM_ABBR[pickText] || pickText}</td>
+                    <td class="text-sm">${statusMsg}</td>
+                </tr>
+            `;
+        });
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-brand-text">No recorded past matches.</td></tr>';
+        } else {
+            tbody.innerHTML = rows.reverse().join('');
         }
 
-        // Start
-        window.onload = init;
-    </script>
-</body>
+        const elCorrect = document.getElementById('resCorrect');
+        const elWrong = document.getElementById('resWrong');
+        const elAcc = document.getElementById('resAcc');
+        if (elCorrect) elCorrect.textContent = correct;
+        if (elWrong) elWrong.textContent = wrong;
+        const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+        if (elAcc) elAcc.textContent = acc + '%';
+    }
 
+    // ─── START ──────────────────────────
+    window.onload = init;
+</script>
+</body>
 </html>
