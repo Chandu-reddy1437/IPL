@@ -854,7 +854,8 @@
             try {
                 // Now fetching the static file directly
                 const res = await fetch('./h2h.json');
-                h2hData = await res.json();
+                const data = await res.json();
+                h2hData = data.records || {};
             } catch (err) {
                 console.error(err);
             }
