@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html class="h-full" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPL Predictor</title>
+<link rel="manifest" href="/manifest.json">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              navy: 'var(--brand-navy)',
+              darker: 'var(--brand-darker)',
+              accent: 'var(--brand-accent)',
+              muted: 'var(--brand-muted)',
+              text: 'var(--brand-text)',
+              surface: 'var(--brand-surface)',
+              primary: 'var(--brand-primary)',
+              overlay: 'var(--brand-overlay)',
+              overlay2: 'var(--brand-overlay2)',
+            }
+          }
+        }
+      }
+    }
+</script>
+<style>
+    /* ═══ THEME VARIABLES ═══ */
+    
+    :root, [data-theme="dark"] {
+      --brand-navy: #0F172A;
+      --brand-darker: #020617;
+      --brand-accent: #F97316;
+      --brand-muted: #1E293B;
+      --brand-text: #94A3B8;
+      --brand-surface: #1E293B;
+      --brand-primary: #ffffff;
+      --brand-overlay: rgba(255, 255, 255, 0.05);
+      --brand-overlay2: rgba(255, 255, 255, 0.2);
+      --bg-body: #020617;
+      --bg-surface: #1E293B;
+      --bg-glass: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-primary: #ffffff;
+      --text-secondary: #94A3B8;
+      --text-on-accent: #020617;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --table-border: rgba(255, 255, 255, 0.05);
+      --table-hover: rgba(255, 255, 255, 0.03);
+      --card-bg: #1E293B;
+      --tooltip-bg: #020617;
+      --modal-backdrop: rgba(2, 6, 23, 0.9);
+      --accent: #F97316;
+      --input-bg: #020617;
+    }
+    
+    [data-theme="light"] {
+      --brand-navy: #CBD5E1;
+      --brand-darker: #F1F5F9;
+      --brand-accent: #EA580C;
+      --brand-muted: #FFFFFF;
+      --brand-text: #475569;
+      --brand-surface: #E2E8F0;
+      --brand-primary: #0F172A;
+      --brand-overlay: rgba(0, 0, 0, 0.05);
+      --brand-overlay2: rgba(0, 0, 0, 0.2);
+      --bg-body: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-glass: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --text-on-accent: #FFFFFF;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --table-border: rgba(0, 0, 0, 0.06);
+      --table-hover: rgba(0, 0, 0, 0.03);
+      --card-bg: #FFFFFF;
+      --tooltip-bg: #0F172A;
+      --modal-backdrop: rgba(0, 0, 0, 0.5);
+      --accent: #EA580C;
+      --input-bg: #F1F5F9;
+    }
+
+    body { background-color: var(--bg-body); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass-effect {
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+    }
+    /* ═══ ENHANCED SELECTED GLOW (Vibrant Indigo) ═══ */
+    .selected-glow {
+      box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5), 0 0 40px 12px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(99, 102, 241, 0.15);
+      border-color: #6366F1 !important;
+      border-width: 3px !important;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5), 0 0 40px 12px rgba(99, 102, 241, 0.2); }
+      50% { box-shadow: 0 0 28px 10px rgba(99, 102, 241, 0.6), 0 0 50px 16px rgba(99, 102, 241, 0.3); }
+    }
+    .selected-check {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 20px; height: 20px;
+      background: #6366F1; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.5);
+      z-index: 5;
+    }
+    .selected-check svg { width: 12px; height: 12px; color: white; }
+
+    /* Team Filter Logo Styles */
+    .team-filter-item {
+      position: relative;
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .team-filter-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+      transform: scale(1.05);
+    }
+    .team-filter-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .team-filter-all {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .team-filter-item.active .team-filter-all {
+      color: var(--accent);
+    }
+
+    .stats-tooltip {
+      visibility: hidden; opacity: 0;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .has-stats:hover .stats-tooltip, .has-stats:focus-within .stats-tooltip {
+      visibility: visible; opacity: 1;
+    }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .modal-overlay {
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.active {
+      opacity: 1; pointer-events: all;
+    }
+    .modal-overlay.active .modal-inner {
+      transform: translateY(0);
+    }
+    .modal-inner {
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+    /* Themed components */
+    .themed-card { background-color: var(--card-bg); border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
+    .themed-text { color: var(--text-secondary); }
+    .themed-chip { background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .themed-input { background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
+    .themed-modal-bg { background-color: var(--modal-backdrop); }
+    .themed-modal { background-color: var(--card-bg); border: 1px solid var(--border-color); }
+    .themed-tooltip { background-color: var(--tooltip-bg); }
+    /* Table styles */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--table-border); }
+    .data-table th { color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .data-table tr:hover td { background-color: var(--table-hover); }
+    /* REFINED THEME TOGGLE BUTTON */
+    .theme-toggle-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .theme-toggle-btn:active {
+        transform: scale(0.95);
+    }
+
+    .theme-toggle-btn .icon-wrapper {
+        position: relative;
+        width: 24px;
+        height: 24px;
+    }
+
+    .theme-toggle-btn span {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+    }
+
+    [data-theme="dark"] .sun-icon { transform: translateY(0); opacity: 1; }
+    [data-theme="dark"] .moon-icon { transform: translateY(40px); opacity: 0; }
+    [data-theme="light"] .sun-icon { transform: translateY(-40px); opacity: 0; }
+    [data-theme="light"] .moon-icon { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body class="font-sans h-full flex flex-col antialiased">
+
+<!-- ═══════════════ STICKY HEADER ═══════════════ -->
+<header class="sticky top-0 z-50 glass-effect px-5 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 bg-brand-accent rounded-lg flex items-center justify-center font-extrabold text-brand-darker text-xs">IPL</div>
+        <h1 class="text-lg font-bold tracking-tight">Predictor</h1>
+    </div>
+    <div class="flex items-center gap-3">
+        <!-- Refined Theme Toggle Button -->
+        <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+            <div class="icon-wrapper">
+                <span class="sun-icon material-symbols-outlined !text-orange-400">light_mode</span>
+                <span class="moon-icon material-symbols-outlined !text-indigo-400">dark_mode</span>
+            </div>
+        </button>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-medium cursor-pointer themed-text" id="userChip"
+                onclick="promptLogin()">Guest</span>
+            <div class="w-9 h-9 rounded-full border-2 border-brand-accent/30 flex items-center justify-center overflow-hidden cursor-pointer themed-card"
+                onclick="promptLogin()">
+                <span class="material-symbols-outlined themed-text text-lg">person</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-24">
+
+    <!-- UPCOMING MATCHES VIEW -->
+    <div id="view-upcoming" class="view-section active">
+        <section class="px-5 pt-6 pb-2">
+            <h2 class="text-2xl font-bold mb-1">Upcoming Matches</h2>
+            <p class="text-brand-text text-sm mb-5">Predict and climb the leaderboard.</p>
+            <!-- Team Filter Circular Logos -->
+            <div class="flex items-center gap-4 overflow-x-auto no-scrollbar -mx-5 px-5 pb-4" id="teamFilters">
+                <button class="team-filter-item active" data-team="All">
+                    <span class="team-filter-all">All</span>
+                </button>
+                <button class="team-filter-item" data-team="MI"><img alt="MI" src="./images_final/MI.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>MI</span>';"/></button>
+                <button class="team-filter-item" data-team="CSK"><img alt="CSK" src="./images_final/CSK.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>CSK</span>';"/></button>
+                <button class="team-filter-item" data-team="RCB"><img alt="RCB" src="./images_final/RCB.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RCB</span>';"/></button>
+                <button class="team-filter-item" data-team="KKR"><img alt="KKR" src="./images_final/KKR.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>KKR</span>';"/></button>
+                <button class="team-filter-item" data-team="SRH"><img alt="SRH" src="./images_final/SRH.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>SRH</span>';"/></button>
+                <button class="team-filter-item" data-team="RR"><img alt="RR" src="./images_final/RR.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RR</span>';"/></button>
+                <button class="team-filter-item" data-team="GT"><img alt="GT" src="./images_final/GT.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>GT</span>';"/></button>
+                <button class="team-filter-item" data-team="DC"><img alt="DC" src="./images_final/DC.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>DC</span>';"/></button>
+                <button class="team-filter-item" data-team="PBKS"><img alt="PBKS" src="./images_final/PBKS.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>PBKS</span>';"/></button>
+                <button class="team-filter-item" data-team="LSG"><img alt="LSG" src="./images_final/LSG.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>LSG</span>';"/></button>
+            </div>
+        </section>
+        <div class="px-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="upcomingMatchesContainer">
+            <!-- JS injected match cards -->
+        </div>
+    </div>
+
+    <!-- LEADERBOARD VIEW -->
+    <div id="view-leaderboard" class="view-section">
+        <section class="px-5 pt-6 pb-4">
+            <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
+            <p class="text-brand-text text-sm">See who's leading the predictions.</p>
+        </section>
+        <div class="px-5">
+            <div class="bg-brand-muted rounded-2xl border border-brand-overlay overflow-hidden">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Correct</th>
+                            <th>Total</th>
+                            <th>Score %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MY RESULTS VIEW -->
+    <div id="view-results" class="view-section">
+        <section class="px-5 pt-6 pb-4">
+            <h2 class="text-2xl font-bold mb-1">My Performance</h2>
+            <p class="text-brand-text text-sm mb-5">Track your prediction accuracy.</p>
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
+                    <div class="text-2xl font-extrabold text-green-400" id="resCorrect">0</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Correct</div>
+                </div>
+                <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
+                    <div class="text-2xl font-extrabold text-red-400" id="resWrong">0</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Wrong</div>
+                </div>
+                <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
+                    <div class="text-2xl font-extrabold text-brand-accent" id="resAcc">0%</div>
+                    <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Accuracy</div>
+                </div>
+            </div>
+        </section>
+        <div class="px-5">
+            <div class="bg-brand-muted rounded-2xl border border-brand-overlay overflow-hidden">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Fixture</th>
+                            <th>Your Pick</th>
+                            <th>Status</th>
+                            <th>Prediction%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ═══════════════ BOTTOM NAVIGATION ═══════════════ -->
+<nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-brand-overlay pb-[env(safe-area-inset-bottom)] pt-3 px-8 flex justify-between items-center z-50">
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-accent active" href="#" onclick="switchView('upcoming'); return false;">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        <span class="text-[10px] font-bold">Matches</span>
+    </a>
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-brand-primary transition-colors" href="#" onclick="switchView('leaderboard'); return false;">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span class="text-[10px] font-bold">Leaderboard</span>
+    </a>
+    <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-brand-primary transition-colors" href="#" onclick="switchView('results'); return false;">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span class="text-[10px] font-bold">My Results</span>
+    </a>
+</nav>
+
+<!-- ═══════════════ LOGIN MODAL ═══════════════ -->
+<div class="modal-overlay fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:p-0" id="loginModal">
+    <div class="fixed inset-0 bg-brand-darker/90 backdrop-blur-sm" onclick="document.getElementById('loginModal').classList.remove('active')"></div>
+    <div class="modal-inner relative bg-brand-muted border border-brand-overlay rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-8">
+        <h3 class="text-2xl font-bold mb-2">Welcome to IPL Predictor</h3>
+        <p class="text-brand-text text-sm mb-8 leading-relaxed">Enter your name to start predicting matches and winning rewards.</p>
+        <label class="sr-only" for="loginInput">Your Name</label>
+        <input class="block w-full rounded-xl bg-brand-darker border border-brand-overlay text-brand-primary focus:border-brand-accent focus:ring-brand-accent text-lg py-4 px-4 mb-5" id="loginInput" placeholder="Your Name" type="text" onkeydown="if(event.key==='Enter') saveName()"/>
+        <button class="w-full bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-4 rounded-xl shadow-lg transition-all text-lg" onclick="saveName()">
+            Let's Go
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════ H2H DETAILS MODAL ═══════════════ -->
+<div class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center px-4" id="h2hModal" onclick="if(event.target===this||event.target.classList.contains('bg-brand-darker/90')) closeH2HModal()">
+    <div class="fixed inset-0 bg-brand-darker/90 backdrop-blur-sm" onclick="closeH2HModal()"></div>
+    <div class="modal-inner relative bg-brand-muted border border-brand-overlay rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-7">
+        <div class="text-center text-sm font-bold mb-5 text-brand-text uppercase tracking-wider" id="h2hModalTitle">Head to Head</div>
+        <!-- Team Logos + Big Score -->
+        <div class="flex items-center justify-around mb-6">
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-full bg-brand-overlay border-2 border-brand-accent/30 flex items-center justify-center p-1.5 overflow-hidden">
+                    <img id="h2hImgA" class="w-full h-full object-contain" src="" alt="">
+                </div>
+                <span class="font-bold text-sm" id="h2hNameA"></span>
+            </div>
+            <div class="text-3xl font-black text-brand-accent" id="h2hScoreBig"></div>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-full bg-brand-overlay border-2 border-brand-overlay flex items-center justify-center p-1.5 overflow-hidden">
+                    <img id="h2hImgB" class="w-full h-full object-contain" src="" alt="">
+                </div>
+                <span class="font-bold text-sm" id="h2hNameB"></span>
+            </div>
+        </div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-y-3 text-center text-sm border-t border-brand-overlay pt-4">
+            <div class="font-bold" id="h2hHomeA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Home Wins</div>
+            <div class="font-bold" id="h2hHomeB">0</div>
+            <div class="font-bold" id="h2hAwayA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Away Wins</div>
+            <div class="font-bold" id="h2hAwayB">0</div>
+            <div class="font-bold text-brand-accent" id="h2hTotalA">0</div>
+            <div class="text-[10px] uppercase text-brand-text font-semibold tracking-wider self-center">Total Wins</div>
+            <div class="font-bold text-brand-accent" id="h2hTotalB">0</div>
+        </div>
+        <div class="text-center text-brand-text text-xs mt-4 pt-3 border-t border-brand-overlay" id="h2hTotalMatches"></div>
+        <button class="w-full mt-4 bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-3 rounded-xl transition-all text-sm" onclick="closeH2HModal()">Close</button>
+    </div>
+</div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+    // ─── GLOBALS ──────────────────────────
+    let currentUser = localStorage.getItem('ipl_username') || null;
+    let scheduleData = [];
+    let myPicks = [];
+    let h2hData = {};
+    let activeFilter = 'All';
+
+    const TEAM_ABBR = {
+        'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
+        'Sunrisers Hyderabad': 'SRH', 'Royal Challengers Bangalore': 'RCB', 'Gujarat Titans': 'GT',
+        'Rajasthan Royals': 'RR', 'Delhi Capitals': 'DC', 'Punjab Kings': 'PBKS', 'Lucknow Super Giants': 'LSG'
+    };
+
+    const TEAM_COLORS = {
+        MI: 'border-blue-500', CSK: 'border-yellow-400', KKR: 'border-purple-500',
+        SRH: 'border-orange-500', RCB: 'border-red-600', GT: 'border-teal-400',
+        RR: 'border-pink-400', DC: 'border-blue-600', PBKS: 'border-red-500', LSG: 'border-cyan-400'
+    };
+
+    const TEAM_BG = {
+        MI: 'bg-blue-900/30', CSK: 'bg-yellow-900/30', KKR: 'bg-purple-900/30',
+        SRH: 'bg-orange-900/30', RCB: 'bg-red-900/30', GT: 'bg-teal-900/30',
+        RR: 'bg-pink-900/30', DC: 'bg-blue-800/30', PBKS: 'bg-red-800/30', LSG: 'bg-cyan-900/30'
+    };
+
+    // ─── THEME ──────────────────────────
+    function initTheme() {
+        const saved = localStorage.getItem('ipl_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', target);
+        localStorage.setItem('ipl_theme', target);
+        const toggleBtn = document.getElementById('themeToggle');
+        if (toggleBtn) toggleBtn.textContent = target === 'dark' ? '☀️' : '🌙';
+    }
+
+    // ─── INIT ──────────────────────────
+    async function init() {
+        initTheme();
+        if (!currentUser) promptLogin();
+        else document.getElementById('userChip').textContent = currentUser;
+
+        await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
+        renderUpcomingMatches();
+        setupFilters();
+        setInterval(updateCountdowns, 1000);
+
+        setInterval(() => {
+            fetchSchedule().then(renderUpcomingMatches);
+            if (currentUser) fetchMyPicks();
+        }, 60000);
+    }
+
+    // ─── DATA FETCHING ──────────────────────────
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
+    const MASTER_KEY = '$2a$10$hkFvOh3x6zhiDHHRVZteKOec/i2JSy.JXIX4qMTyYx4BvIs2m8.Fu';
+
+    async function fetchSchedule() {
+        try {
+            const res = await fetch('./schedule.json');
+            const data = await res.json();
+            scheduleData = data.matches;
+        } catch (err) { console.error(err); }
+    }
+
+    async function fetchMyPicks() {
+        if (!currentUser) return;
+        try {
+            const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const data = await res.json();
+            const allPicks = data.record.picks || [];
+            myPicks = allPicks.filter(p => p.userName === currentUser);
+        } catch (err) { console.error(err); }
+    }
+
+    async function fetchH2H() {
+        try {
+            const res = await fetch('./h2h.json');
+            const data = await res.json();
+            h2hData = data.records || {};
+        } catch (err) { console.error(err); }
+    }
+
+    // ─── NAVIGATION ──────────────────────────
+    function switchView(viewName) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${viewName}`).classList.add('active');
+
+        document.querySelectorAll('.bottom-nav-item').forEach(el => {
+            el.classList.remove('text-brand-accent');
+            el.classList.add('text-brand-text');
+        });
+        const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
+        const navItems = document.querySelectorAll('.bottom-nav-item');
+        navItems[idx].classList.remove('text-brand-text');
+        navItems[idx].classList.add('text-brand-accent');
+
+        if (viewName === 'leaderboard') fetchLeaderboard();
+        if (viewName === 'results') renderMyResults();
+    }
+
+    function setupFilters() {
+        document.querySelectorAll('.team-filter-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.team-filter-item').forEach(b => {
+                    b.classList.remove('active');
+                });
+                e.currentTarget.classList.add('active');
+                activeFilter = e.currentTarget.dataset.team;
+                renderUpcomingMatches();
+            });
+        });
+    }
+
+    // ─── LOGIN ──────────────────────────
+    function promptLogin() {
+        document.getElementById('loginModal').classList.add('active');
+        document.getElementById('loginInput').value = currentUser || '';
+        setTimeout(() => document.getElementById('loginInput').focus(), 100);
+    }
+
+    async function saveName() {
+        const name = document.getElementById('loginInput').value.trim();
+        if (!name) return;
+        currentUser = name;
+        localStorage.setItem('ipl_username', name);
+        document.getElementById('userChip').textContent = name;
+        document.getElementById('loginModal').classList.remove('active');
+        await fetchMyPicks();
+        renderUpcomingMatches();
+        if (document.getElementById('view-results').classList.contains('active')) renderMyResults();
+    }
+
+    // ─── LEADERBOARD ──────────────────────────
+    async function fetchLeaderboard() {
+        const tbody = document.getElementById('leaderboardBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-brand-text">Loading...</td></tr>';
+
+        try {
+            const schedRes = await fetch('./schedule.json');
+            const schedData = await schedRes.json();
+            const allMatches = schedData.matches;
+
+            const resultsMap = {};
+            allMatches.forEach(m => { if (m.winner !== null) resultsMap[m.id] = m.winner; });
+
+            const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const binData = await res.json();
+            const allPicks = binData.record.picks || [];
+
+            const userStats = {};
+            allPicks.forEach(p => {
+                if (!userStats[p.userName]) userStats[p.userName] = { name: p.userName, correct: 0, total: 0 };
+                if (resultsMap[p.matchId] !== undefined) {
+                    userStats[p.userName].total++;
+                    if (p.team === resultsMap[p.matchId]) userStats[p.userName].correct++;
+                }
+            });
+
+            const leaderboard = Object.values(userStats).map(stat => {
+                const scorePct = stat.total > 0 ? ((stat.correct / stat.total) * 100).toFixed(1) : "0.0";
+                return { ...stat, scorePct: parseFloat(scorePct) };
+            });
+
+            leaderboard.sort((a, b) => b.correct !== a.correct ? b.correct - a.correct : b.scorePct - a.scorePct);
+            leaderboard.forEach((user, index) => { user.rank = index + 1; });
+
+            if (leaderboard.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-brand-text">No data yet. Start predicting!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leaderboard.map(l => `
+                <tr>
+                    <td class="font-bold text-brand-accent">#${l.rank}</td>
+                    <td class="font-medium">${l.name} ${l.name === currentUser ? '<span class="ml-1.5 text-[10px] bg-brand-accent text-brand-darker px-2 py-0.5 rounded-full font-bold">YOU</span>' : ''}</td>
+                    <td class="text-green-400 font-semibold">${l.correct}</td>
+                    <td class="text-brand-text">${l.total}</td>
+                    <td class="font-semibold">${l.scorePct}%</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-red-400">Failed to load leaderboard</td></tr>';
+        }
+    }
+
+    // ─── H2H ──────────────────────────
+    function getH2HString(tA, tB) {
+        let winsA = 0, winsB = 0;
+        if (h2hData[tA] && h2hData[tA][tB]) winsA += (h2hData[tA][tB].home || 0) + (h2hData[tA][tB].away || 0);
+        if (h2hData[tB] && h2hData[tB][tA]) winsB += (h2hData[tB][tA].home || 0) + (h2hData[tB][tA].away || 0);
+        if (winsA === 0 && winsB === 0) return 'No H2H data';
+        const abbrA = TEAM_ABBR[tA] || tA;
+        const abbrB = TEAM_ABBR[tB] || tB;
+        return `${abbrA} ${winsA} - ${winsB} ${abbrB}`;
+    }
+
+    function showH2HModal(teamA, teamB) {
+        const abbrA = TEAM_ABBR[teamA] || teamA;
+        const abbrB = TEAM_ABBR[teamB] || teamB;
+        const aVsB = (h2hData[teamA] && h2hData[teamA][teamB]) ? h2hData[teamA][teamB] : { home: 0, away: 0 };
+        const bVsA = (h2hData[teamB] && h2hData[teamB][teamA]) ? h2hData[teamB][teamA] : { home: 0, away: 0 };
+        const homeA = aVsB.home || 0, awayA = aVsB.away || 0, totalA = homeA + awayA;
+        const homeB = bVsA.home || 0, awayB = bVsA.away || 0, totalB = homeB + awayB;
+        const totalMatches = totalA + totalB;
+
+        document.getElementById('h2hModalTitle').textContent = `${abbrA} vs ${abbrB} — Head to Head`;
+        document.getElementById('h2hImgA').src = `./images_final/${abbrA}.png`;
+        document.getElementById('h2hImgB').src = `./images_final/${abbrB}.png`;
+        document.getElementById('h2hNameA').textContent = abbrA;
+        document.getElementById('h2hNameB').textContent = abbrB;
+        document.getElementById('h2hScoreBig').textContent = `${totalA} - ${totalB}`;
+        document.getElementById('h2hHomeA').textContent = homeA;
+        document.getElementById('h2hHomeB').textContent = homeB;
+        document.getElementById('h2hAwayA').textContent = awayA;
+        document.getElementById('h2hAwayB').textContent = awayB;
+        document.getElementById('h2hTotalA').textContent = totalA;
+        document.getElementById('h2hTotalB').textContent = totalB;
+        document.getElementById('h2hTotalMatches').innerHTML = `Total Matches Played: <strong class="text-brand-primary">${totalMatches}</strong>`;
+        document.getElementById('h2hModal').classList.add('active');
+    }
+
+    function closeH2HModal() { document.getElementById('h2hModal').classList.remove('active'); }
+
+    // ─── RENDER UPCOMING MATCHES ──────────────────────────
+    function renderUpcomingMatches() {
+        const container = document.getElementById('upcomingMatchesContainer');
+        container.innerHTML = '';
+
+        const now = Date.now();
+        const futureMatches = scheduleData.filter(m => m.winner === null);
+        const filtered = activeFilter === 'All'
+            ? futureMatches
+            : futureMatches.filter(m => TEAM_ABBR[m.teamA] === activeFilter || TEAM_ABBR[m.teamB] === activeFilter);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-12 text-brand-text bg-brand-muted rounded-2xl border border-brand-overlay">No matches found.</div>`;
+            return;
+        }
+
+        filtered.forEach(m => {
+            const matchTime = new Date(m.startTimeISO).getTime();
+            const isLocked = now >= matchTime - 30 * 60 * 1000;
+            const existingPick = myPicks.find(p => p.matchId === m.id);
+            const pickValue = existingPick ? existingPick.team : '';
+            const abbrA = TEAM_ABBR[m.teamA] || m.teamA;
+            const abbrB = TEAM_ABBR[m.teamB] || m.teamB;
+            const h2hTooltip = getH2HString(m.teamA, m.teamB);
+            const colorA = TEAM_COLORS[abbrA] || 'border-brand-overlay2';
+            const colorB = TEAM_COLORS[abbrB] || 'border-brand-overlay2';
+            const bgA = TEAM_BG[abbrA] || 'bg-brand-overlay';
+            const bgB = TEAM_BG[abbrB] || 'bg-brand-overlay';
+            const glowA = pickValue === m.teamA ? 'selected-glow' : '';
+            const glowB = pickValue === m.teamB ? 'selected-glow' : '';
+            const checkA = pickValue === m.teamA ? '<div class="selected-check"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>' : '';
+            const checkB = pickValue === m.teamB ? '<div class="selected-check"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>' : '';
+
+            const card = document.createElement('article');
+            card.className = 'themed-card rounded-xl p-3.5 shadow-xl transition-transform active:scale-[0.99]';
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[9px] uppercase tracking-widest text-brand-accent font-bold">${m.dateLabel}</span>
+                    <span class="text-[8px] themed-chip px-1.5 py-0.5 rounded font-medium truncate max-w-[55%]" title="${m.venue}">${m.venue}</span>
+                </div>
+                <div class="flex items-center justify-between mb-4 relative">
+                    <div class="flex flex-col items-center gap-1.5 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                        <div class="relative">
+                            <div class="w-14 h-14 ${bgA} rounded-full flex items-center justify-center p-2 border-2 ${colorA} ${glowA} transition-all duration-300">
+                                <img alt="${abbrA}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrA}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrA}';">
+                            </div>
+                            ${checkA}
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                                <span class="material-symbols-outlined text-[12px] themed-text">info</span>
+                            </div>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 w-36 themed-tooltip border border-brand-overlay rounded-lg py-2 px-2.5 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[8px] uppercase tracking-wider text-brand-text mb-1 font-bold">Head to Head</p>
+                                <p class="text-[11px] font-bold text-brand-primary">${h2hTooltip}</p>
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-6 border-transparent border-t-brand-darker"></div>
+                            </div>
+                        </div>
+                        <span class="font-extrabold text-xs tracking-tight text-brand-primary">${abbrA}</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-lg font-black italic opacity-10">VS</span>
+                        <div class="countdown text-[10px] text-brand-accent font-mono mt-0.5 font-bold" data-time="${m.startTimeISO}">...</div>
+                    </div>
+                    <div class="flex flex-col items-center gap-1.5 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
+                        <div class="relative">
+                            <div class="w-14 h-14 ${bgB} rounded-full flex items-center justify-center p-2 border-2 ${colorB} ${glowB} transition-all duration-300">
+                                <img alt="${abbrB}" class="w-full h-full object-contain relative z-10" src="./images_final/${abbrB}.png" onerror="this.style.display='none'; this.parentElement.textContent='${abbrB}';">
+                            </div>
+                            ${checkB}
+                            <div class="absolute -top-1 -right-1 themed-card rounded-full p-0.5 shadow-lg z-10">
+                                <span class="material-symbols-outlined text-[12px] themed-text">info</span>
+                            </div>
+                            <div class="stats-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 w-36 themed-tooltip border border-brand-overlay rounded-lg py-2 px-2.5 shadow-2xl text-center pointer-events-none">
+                                <p class="text-[8px] uppercase tracking-wider text-brand-text mb-1 font-bold">Head to Head</p>
+                                <p class="text-[11px] font-bold text-brand-primary">${h2hTooltip}</p>
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-6 border-transparent border-t-brand-darker"></div>
+                            </div>
+                        </div>
+                        <span class="font-extrabold text-xs tracking-tight text-brand-primary">${abbrB}</span>
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-brand-overlay">
+                    ${existingPick ? `
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-[9px] text-brand-text uppercase tracking-wider font-semibold">Your Prediction</p>
+                            <p class="text-[9px] text-brand-text/60">${isLocked ? '🔒 Locked' : 'Update until kickoff'}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="${pickValue === m.teamA ? 'bg-brand-accent text-brand-darker border-brand-accent' : 'bg-brand-overlay hover:bg-brand-accent/20 border-brand-overlay hover:border-brand-accent text-brand-text'} border py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-all" onclick="submitPickDirect('${m.id}', '${m.teamA}')" ${isLocked ? 'disabled' : ''}>
+                                ${pickValue === m.teamA ? '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' : ''} ${abbrA}
+                            </button>
+                            <button class="${pickValue === m.teamB ? 'bg-brand-accent text-brand-darker border-brand-accent' : 'bg-brand-overlay hover:bg-brand-accent/20 border-brand-overlay hover:border-brand-accent text-brand-text'} border py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-all" onclick="submitPickDirect('${m.id}', '${m.teamB}')" ${isLocked ? 'disabled' : ''}>
+                                ${pickValue === m.teamB ? '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>' : ''} ${abbrB}
+                            </button>
+                        </div>
+                    ` : `
+                        <p class="text-[10px] text-center text-brand-text mb-2 uppercase tracking-wider font-semibold">${isLocked ? '🔒 Predictions Locked' : 'Who will win?'}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="bg-brand-overlay hover:bg-brand-accent/20 border border-brand-overlay hover:border-brand-accent py-2 rounded-lg font-medium text-xs transition-all" onclick="submitPickDirect('${m.id}', '${m.teamA}')" ${isLocked ? 'disabled' : ''}>Predict ${abbrA}</button>
+                            <button class="bg-brand-overlay hover:bg-brand-accent/20 border border-brand-overlay hover:border-brand-accent py-2 rounded-lg font-medium text-xs transition-all" onclick="submitPickDirect('${m.id}', '${m.teamB}')" ${isLocked ? 'disabled' : ''}>Predict ${abbrB}</button>
+                        </div>
+                    `}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        updateCountdowns();
+    }
+
+    // ─── SUBMIT PICK (direct button) ──────────────────────────
+    async function submitPickDirect(matchId, team) {
+        if (!currentUser) { promptLogin(); return; }
+
+        try {
+            const currentRes = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const currentData = await currentRes.json();
+            let allPicks = currentData.record.picks || [];
+            allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
+            allPicks.push({ userName: currentUser, matchId, team, frozen: true, timestamp: new Date().toISOString() });
+
+            const saveRes = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                body: JSON.stringify({ picks: allPicks })
+            });
+
+            if (saveRes.ok) {
+                await fetchMyPicks();
+                renderUpcomingMatches();
+            } else {
+                alert('Failed to submit pick.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error.');
+        }
+    }
+
+    // Keep old submitPick for compatibility
+    async function submitPick(matchId) {
+        if (!currentUser) { promptLogin(); return; }
+        const selectEl = document.getElementById(`pick-${matchId}`);
+        if (!selectEl) return;
+        const team = selectEl.value;
+        if (!team) { alert('Please select a team'); return; }
+        await submitPickDirect(matchId, team);
+    }
+
+    // ─── COUNTDOWN TIMER ──────────────────────────
+    function updateCountdowns() {
+        const now = Date.now();
+        document.querySelectorAll('.countdown').forEach(el => {
+            const matchTime = new Date(el.dataset.time).getTime();
+            const cutoff = matchTime - (30 * 60 * 1000);
+            const diff = cutoff - now;
+            if (diff <= 0) { el.textContent = "00:00:00"; return; }
+            const totalMins = Math.floor(diff / 60000);
+            if (totalMins > 24 * 60) {
+                const days = Math.floor(totalMins / (24 * 60));
+                const hours = Math.floor((totalMins % (24 * 60)) / 60);
+                el.textContent = `${days}d ${hours}h`;
+            } else {
+                const h = Math.floor(totalMins / 60).toString().padStart(2, '0');
+                const m = (totalMins % 60).toString().padStart(2, '0');
+                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                el.textContent = `${h}:${m}:${s}`;
+            }
+        });
+    }
+
+    // ─── RENDER MY RESULTS ──────────────────────────
+    async function renderMyResults() {
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-brand-text">Loading...</td></tr>';
+        if (!currentUser) { tbody.innerHTML = ''; return; }
+
+        // Fetch all picks from all players
+        let allPicks = [];
+        try {
+            const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+            const data = await res.json();
+            allPicks = data.record.picks || [];
+        } catch (err) {
+            console.error('Failed to fetch all picks for Prediction%', err);
+        }
+
+        // Get all unique players (anyone who ever made a pick)
+        const allPlayers = new Set(allPicks.map(p => p.userName));
+        const totalPlayers = allPlayers.size;
+
+        const pastMatches = scheduleData.filter(m => m.winner !== null || new Date(m.startTimeISO).getTime() - 30 * 60 * 1000 <= Date.now());
+        let correct = 0, wrong = 0, total = 0;
+
+        const rows = pastMatches.map(m => {
+            const myPick = myPicks.find(p => p.matchId === m.id);
+            const pickText = myPick ? myPick.team : '-';
+            let statusMsg = '<span class="text-brand-text">Pending</span>';
+            let predPctHtml = '<span class="text-brand-text">—</span>';
+
+            if (m.winner !== null) {
+                if (myPick) total++;
+                if (myPick && myPick.team === m.winner) {
+                    correct++;
+                    statusMsg = `<span class="text-green-400 font-semibold">Correct ✓</span>`;
+                } else if (myPick && myPick.team !== m.winner) {
+                    wrong++;
+                    statusMsg = `<span class="text-red-400 font-semibold">Wrong ✗</span>`;
+                } else {
+                    statusMsg = `<span class="text-brand-text">${TEAM_ABBR[m.winner] || m.winner}</span>`;
+                }
+
+                // Calculate Prediction% for this match
+                if (totalPlayers > 0) {
+                    const matchPicks = allPicks.filter(p => p.matchId === m.id);
+                    const correctPredictors = matchPicks.filter(p => p.team === m.winner).length;
+                    // Players who didn't predict count as wrong (denominator is totalPlayers)
+                    const pct = Math.round((correctPredictors / totalPlayers) * 100);
+                    const pctColor = pct >= 50 ? 'text-green-400' : 'text-red-400';
+                    predPctHtml = `<span class="${pctColor} font-semibold">${pct}%</span>`;
+                }
+            }
+            return `
+                <tr>
+                    <td class="text-brand-text text-xs whitespace-nowrap">${m.dateLabel}</td>
+                    <td class="font-medium text-sm">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
+                    <td class="font-semibold text-sm">${TEAM_ABBR[pickText] || pickText}</td>
+                    <td class="text-sm">${statusMsg}</td>
+                    <td class="text-sm text-center">${predPctHtml}</td>
+                </tr>
+            `;
+        });
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-brand-text">No recorded past matches.</td></tr>';
+        } else {
+            tbody.innerHTML = rows.reverse().join('');
+        }
+
+        const elCorrect = document.getElementById('resCorrect');
+        const elWrong = document.getElementById('resWrong');
+        const elAcc = document.getElementById('resAcc');
+        if (elCorrect) elCorrect.textContent = correct;
+        if (elWrong) elWrong.textContent = wrong;
+        const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+        if (elAcc) elAcc.textContent = acc + '%';
+    }
+
+    // ─── START ──────────────────────────
+    window.onload = init;
+</script>
+</body>
+</html>

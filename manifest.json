@@ -1,0 +1,15 @@
+{
+    "name": "IPL Predictor",
+    "short_name": "IPLPredict",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "icons": [
+        {
+            "src": "/images_final/CSK.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ]
+}
