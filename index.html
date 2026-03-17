@@ -976,15 +976,9 @@
                 return;
             }
 
-            if (globalUsers[name]) {
-                hint.textContent = "Welcome back! Enter your 4-digit PIN";
-                msg.textContent = "Please verify your 4-digit PIN to continue.";
-                loginBtn.textContent = "Login";
-            } else {
-                hint.innerHTML = `<span class="text-red-400">User not registered!</span>`;
-                msg.innerHTML = `Contact admin <span class="text-brand-accent font-bold">(Gopinadh or Chandrakanth)</span> to get registered and start playing.`;
-                loginBtn.textContent = "Login";
-            }
+            hint.textContent = "Welcome back! Enter your 4-digit PIN";
+            msg.textContent = "Please verify your 4-digit PIN to continue.";
+            loginBtn.textContent = "Login";
         }
 
         let pendingUser = null; // Store user during PIN change process
