@@ -461,14 +461,18 @@
                 </div>
                 <p class="text-brand-text text-sm mb-5">Track your prediction accuracy.</p>
                 <div class="grid grid-cols-4 gap-2 mb-5">
-                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                    <button class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center transition-all active:scale-95" id="btnFilterCorrect" onclick="setResultsFilter('correct')">
                         <div class="text-lg font-extrabold text-green-400" id="resCorrect">0</div>
-                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">CORRECT</div>
-                    </div>
-                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1 flex items-center justify-center gap-1">
+                            CORRECT <span class="material-symbols-outlined text-[13px] opacity-70">info</span>
+                        </div>
+                    </button>
+                    <button class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center transition-all active:scale-95" id="btnFilterWrong" onclick="setResultsFilter('wrong')">
                         <div class="text-lg font-extrabold text-red-400" id="resWrong">0</div>
-                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">WRONG</div>
-                    </div>
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1 flex items-center justify-center gap-1">
+                            WRONG <span class="material-symbols-outlined text-[13px] opacity-70">info</span>
+                        </div>
+                    </button>
                     <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
                         <div class="text-lg font-extrabold text-brand-primary" id="resAcc">0%</div>
                         <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">ACCURACY%</div>
@@ -777,6 +781,7 @@
         let globalUsers = {}; // Mapping of username to PIN
         let leaderboardData = [];
         let currentSort = { field: 'points', direction: 'desc' };
+        let resultsFilter = 'all'; // 'all', 'correct', 'wrong'
 
         const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
         const SCHEDULE_BIN_URL = 'https://api.jsonbin.io/v3/b/69b89f95aa77b81da9eefef2';
@@ -1707,12 +1712,37 @@
         }
 
         // ─── RENDER MY RESULTS ──────────────────────────
+        function setResultsFilter(type) {
+            if (resultsFilter === type) resultsFilter = 'all';
+            else resultsFilter = type;
+            renderMyResults();
+        }
+
         async function renderMyResults() {
             const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-brand-text">Loading...</td></tr>';
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-brand-text">Loading...</td></tr>';
             if (!currentUser) { tbody.innerHTML = ''; return; }
 
-            // Fetch all picks from all players
+            // Update button styles
+            const btnCorrect = document.getElementById('btnFilterCorrect');
+            const btnWrong = document.getElementById('btnFilterWrong');
+            
+            [btnCorrect, btnWrong].forEach(b => {
+                if(b) {
+                    b.classList.remove('border-brand-accent', 'bg-brand-accent/10');
+                    b.classList.add('border-brand-overlay', 'bg-brand-muted');
+                }
+            });
+            
+            if (resultsFilter === 'correct' && btnCorrect) {
+                btnCorrect.classList.replace('border-brand-overlay', 'border-brand-accent');
+                btnCorrect.classList.replace('bg-brand-muted', 'bg-brand-accent/10');
+            } else if (resultsFilter === 'wrong' && btnWrong) {
+                btnWrong.classList.replace('border-brand-overlay', 'border-brand-accent');
+                btnWrong.classList.replace('bg-brand-muted', 'bg-brand-accent/10');
+            }
+
             let allPicks = [];
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
@@ -1720,11 +1750,10 @@
                 allPicks = data.record.picks || [];
                 globalAllPicks = allPicks;
             } catch (err) {
-                console.error('Failed to fetch all picks for Prediction%', err);
+                console.error('Failed to fetch all picks', err);
                 allPicks = globalAllPicks;
             }
 
-            // Get all unique players (anyone who ever made a pick), excluding ADMIN
             const allPlayers = new Set(allPicks.map(p => p.userName).filter(u => u !== 'ADMIN'));
             globalAllPlayers = allPlayers;
             const totalPlayers = allPlayers.size;
@@ -1732,28 +1761,32 @@
             const pastMatches = scheduleData.filter(m => m.winner !== null || new Date(m.startTimeISO).getTime() - 30 * 60 * 1000 <= Date.now());
             let correct = 0, wrong = 0, total = 0;
 
-            const rows = pastMatches.map(m => {
+            const allRows = pastMatches.map(m => {
                 const myPick = allPicks.find(p => p.matchId === m.id && p.userName === currentUser);
                 const pickText = myPick ? myPick.team : '-';
                 let statusMsg = '<span class="text-brand-text">Pending</span>';
                 let predPctHtml = '<span class="text-brand-text">—</span>';
+                let outcome = 'pending';
 
                 if (m.winner !== null) {
                     if (m.winner === 'No Result') {
                         statusMsg = `<span class="text-brand-text font-semibold italic">No Result</span>`;
+                        outcome = 'no-result';
                     } else {
                         if (myPick) total++;
                         if (myPick && myPick.team === m.winner) {
                             correct++;
                             statusMsg = `<span class="text-green-400 font-semibold">Correct ✓</span>`;
+                            outcome = 'correct';
                         } else if (myPick && myPick.team !== m.winner) {
                             wrong++;
                             statusMsg = `<span class="text-red-400 font-semibold">Wrong ✗</span>`;
+                            outcome = 'wrong';
                         } else {
                             statusMsg = `<span class="text-brand-text">${TEAM_ABBR[m.winner] || m.winner}</span>`;
+                            outcome = 'missed';
                         }
 
-                        // Calculate Prediction% for this match
                         if (totalPlayers > 0) {
                             const matchPicks = allPicks.filter(p => p.matchId === m.id && p.userName !== 'ADMIN');
                             const correctPredictors = matchPicks.filter(p => p.team === m.winner).length;
@@ -1771,26 +1804,32 @@
                         ? `<span class="text-red-400 font-black">${pts}</span>`
                         : `<span class="text-brand-text">${pts}</span>`;
 
-                return `
-                <tr>
-                    <td class="text-brand-text text-xs whitespace-nowrap">${m.dateLabel}</td>
-                    <td class="font-medium text-sm">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
-                    <td class="font-semibold text-sm">${TEAM_ABBR[pickText] || pickText}</td>
-                    <td class="text-sm">${statusMsg}</td>
-                    <td class="text-sm text-center font-bold">${pointsDisplay}</td>
-                    <td class="text-sm text-center">${predPctHtml}</td>
-                </tr>
-            `;
+                const html = `
+                    <tr>
+                        <td class="text-brand-text text-xs whitespace-nowrap">${m.dateLabel}</td>
+                        <td class="font-medium text-sm">${TEAM_ABBR[m.teamA] || m.teamA} vs ${TEAM_ABBR[m.teamB] || m.teamB}</td>
+                        <td class="font-semibold text-sm">${TEAM_ABBR[pickText] || pickText}</td>
+                        <td class="text-sm">${statusMsg}</td>
+                        <td class="text-sm text-center font-bold">${pointsDisplay}</td>
+                        <td class="text-sm text-center">${predPctHtml}</td>
+                    </tr>
+                `;
+                return { html, outcome };
             });
 
-            if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-brand-text">No recorded past matches.</td></tr>';
+            const filteredRows = allRows.filter(r => {
+                if (resultsFilter === 'all') return true;
+                return r.outcome === resultsFilter;
+            });
+
+            if (filteredRows.length === 0) {
+                const msg = resultsFilter === 'all' ? 'No recorded past matches.' : `No ${resultsFilter} predictions found.`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-brand-text">${msg}</td></tr>`;
             } else {
-                tbody.innerHTML = rows.reverse().join('');
+                tbody.innerHTML = filteredRows.reverse().map(r => r.html).join('');
             }
 
             const decisiveMatchCount = scheduleData.filter(m => m.winner !== null && m.winner !== 'No Result').length;
-
             const elCorrect = document.getElementById('resCorrect');
             const elWrong = document.getElementById('resWrong');
             const elAcc = document.getElementById('resAcc');
@@ -1798,14 +1837,10 @@
 
             if (elCorrect) elCorrect.textContent = correct;
             if (elWrong) elWrong.textContent = wrong;
-            
-            const totalPoints = allPicks.filter(p => p.userName === currentUser)
-                                       .reduce((sum, p) => sum + (p.points || 0), 0);
+            const totalPoints = allPicks.filter(p => p.userName === currentUser).reduce((sum, p) => sum + (p.points || 0), 0);
             if (elPoints) elPoints.textContent = Math.round(totalPoints);
-            
             const acc = decisiveMatchCount > 0 ? (correct / decisiveMatchCount * 100).toFixed(2) : "0.00";
             if (elAcc) elAcc.textContent = acc + '%';
-            
             updateGlobalMatchCounts(scheduleData);
         }
 
