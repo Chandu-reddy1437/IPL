@@ -403,8 +403,7 @@
                     <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
                     <p class="text-brand-text text-sm">See who's leading the predictions.</p>
                 </div>
-                <div class="text-xs text-brand-text font-bold uppercase mb-1" id="leaderboardMatchesCount">Completed
-                    Matches: 0</div>
+                <div class="text-xs text-brand-text font-bold uppercase mb-1 text-right" id="leaderboardMatchesCount">Completed<br>Matches: 0</div>
             </section>
             <div class="px-5">
                 <div class="bg-brand-muted rounded-2xl border border-brand-overlay overflow-hidden">
@@ -420,7 +419,8 @@
                                         <span id="sort-correct" class="text-[8px] ml-1 hidden"></span>
                                     </th>
                                     <th class="text-center sortable" onclick="sortLeaderboard('scorePct')">Accuracy %
-                                        <span id="sort-scorePct" class="text-[8px] ml-1 hidden"></span></th>
+                                        <span id="sort-scorePct" class="text-[8px] ml-1 hidden"></span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboardBody">
@@ -459,9 +459,9 @@
         <div id="view-results" class="view-section">
             <section class="px-5 pt-6 pb-4">
                 <div class="flex justify-between items-end mb-1">
-                    <h2 class="text-2xl font-bold">My Performance</h2>
-                    <div class="text-xs text-brand-text font-bold uppercase mb-1" id="myPerformanceMatchesCount">
-                        Completed Matches: 0</div>
+                    <h2 class="text-2xl font-bold">My Results</h2>
+                    <div class="text-xs text-brand-text font-bold uppercase mb-1 text-right" id="myPerformanceMatchesCount">
+                        Completed<br>Matches: 0</div>
                 </div>
                 <p class="text-brand-text text-sm mb-5">Track your prediction accuracy.</p>
                 <div class="grid grid-cols-4 gap-2 mb-5">
@@ -800,6 +800,20 @@
         const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
         const SCHEDULE_BIN_URL = 'https://api.jsonbin.io/v3/b/69b89f95aa77b81da9eefef2';
         const MASTER_KEY = '$2a$10$hkFvOh3x6zhiDHHRVZteKOec/i2JSy.JXIX4qMTyYx4BvIs2m8.Fu';
+        
+        function getNormalizedData(record) {
+            const rawPicks = record.picks || [];
+            const rawUsers = record.users || {};
+            const normalizedPicks = rawPicks.map(p => ({
+                ...p,
+                userName: p.userName ? p.userName.toUpperCase().trim() : 'UNKNOWN'
+            }));
+            const normalizedUsers = {};
+            for (const name in rawUsers) {
+                normalizedUsers[name.toUpperCase().trim()] = rawUsers[name];
+            }
+            return { picks: normalizedPicks, users: normalizedUsers };
+        }
 
         const TEAM_ABBR = {
             'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
@@ -865,12 +879,15 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const data = await res.json();
-                const allPicks = data.record.picks || [];
-                globalAllPicks = allPicks;
-                globalUsers = data.record.users || {};
-                globalAllPlayers = new Set(allPicks.map(p => p.userName));
+                const { picks, users } = getNormalizedData(data.record);
+
+                globalAllPicks = picks;
+                globalUsers = users;
+                globalAllPlayers = new Set(picks.map(p => p.userName));
+
                 if (currentUser) {
-                    myPicks = allPicks.filter(p => p.userName === currentUser);
+                    const normalizedCurrent = currentUser.toUpperCase();
+                    myPicks = picks.filter(p => p.userName === normalizedCurrent);
                 }
             } catch (err) { console.error(err); }
         }
@@ -1012,8 +1029,7 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const data = await res.json();
-                const users = data.record.users || {};
-                const allPicks = data.record.picks || [];
+                const { picks: allPicks, users } = getNormalizedData(data.record);
 
                 if (users[name]) {
                     // Existing user validation
@@ -1080,8 +1096,7 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const data = await res.json();
-                const users = data.record.users || {};
-                const allPicks = data.record.picks || [];
+                const { picks: allPicks, users } = getNormalizedData(data.record);
 
                 if (pendingUser) {
                     users[pendingUser.name] = p1;
@@ -1183,7 +1198,7 @@
             const completed = allMatches.filter(m => m.winner !== null && m.winner !== 'No Result').length;
             ['leaderboardMatchesCount', 'myPerformanceMatchesCount'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.textContent = `Completed Matches: ${completed}`;
+                if (el) el.innerHTML = `Completed<br>Matches: ${completed}`;
             });
         }
 
@@ -1290,6 +1305,9 @@
                 };
             });
 
+            // Reset comparison mode when chart is recreated to keep legend in sync
+            isComparisonMode = false;
+
             // Prepend a "Start" label for the 0-point
             const fullLabels = ['Start', ...labels];
 
@@ -1385,29 +1403,60 @@
             container.innerHTML = html;
         }
 
+        function syncLegendStyles() {
+            if (!leaderboardChartInstance) return;
+            leaderboardChartInstance.data.datasets.forEach(ds => {
+                const player = ds.label;
+                const btn = document.getElementById(`legend-${player}`);
+                if (!btn) return;
+
+                const color = chartUserColors[player];
+                if (!isComparisonMode) {
+                    // Default state: All visible, show their own border color
+                    btn.classList.remove('opacity-40', 'opacity-30');
+                    btn.style.borderColor = color;
+                    btn.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    btn.style.boxShadow = 'none';
+                    btn.style.transform = 'scale(1)';
+                } else if (ds.hidden) {
+                    // Inactive (Comparison mode ON, but this one is hidden)
+                    btn.classList.add('opacity-30');
+                    btn.classList.remove('opacity-40');
+                    btn.style.borderColor = 'rgba(148, 163, 184, 0.1)';
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.boxShadow = 'none';
+                    btn.style.transform = 'scale(0.95)';
+                } else {
+                    // Active Selection (Comparison mode ON, and this one is visible)
+                    btn.classList.remove('opacity-40', 'opacity-30');
+                    btn.style.borderColor = color;
+                    // Add a nice glow and background to show it's "ON"
+                    const hsla = color.replace('hsl', 'hsla').replace(')', ', 0.2)');
+                    const shadow = color.replace('hsl', 'hsla').replace(')', ', 0.4)');
+                    btn.style.backgroundColor = hsla;
+                    btn.style.boxShadow = `0 0 15px ${shadow}`;
+                    btn.style.transform = 'scale(1.05)';
+                }
+            });
+        }
+
         function toggleChartDataset(playerName) {
             if (!leaderboardChartInstance) return;
 
-            // If not in comparison mode, hide all others and isolate this one
+            const datasets = leaderboardChartInstance.data.datasets;
+            const dataset = datasets.find(ds => ds.label === playerName);
+            if (!dataset) return;
+
             if (!isComparisonMode) {
                 isComparisonMode = true;
-                leaderboardChartInstance.data.datasets.forEach(ds => {
+                datasets.forEach(ds => {
                     ds.hidden = (ds.label !== playerName);
-                    const btn = document.getElementById(`legend-${ds.label}`);
-                    if (btn) {
-                        if (ds.hidden) btn.classList.add('opacity-40');
-                        else btn.classList.remove('opacity-40');
-                    }
                 });
             } else {
-                // Toggling in comparison mode
-                const dataset = leaderboardChartInstance.data.datasets.find(ds => ds.label === playerName);
-                const btn = document.getElementById(`legend-${playerName}`);
-                if (dataset && btn) {
-                    dataset.hidden = !dataset.hidden;
-                    btn.classList.toggle('opacity-40');
-                }
+                dataset.hidden = !dataset.hidden;
             }
+
+            syncLegendStyles();
             leaderboardChartInstance.update();
         }
 
@@ -1417,11 +1466,8 @@
             isComparisonMode = false;
             leaderboardChartInstance.data.datasets.forEach(ds => {
                 ds.hidden = false;
-                const btn = document.getElementById(`legend-${ds.label}`);
-                if (btn) {
-                    btn.classList.remove('opacity-40');
-                }
             });
+            syncLegendStyles();
             leaderboardChartInstance.update();
         }
 
@@ -1668,8 +1714,7 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const currentData = await res.json();
-                let allPicks = currentData.record.picks || [];
-                let users = currentData.record.users || {};
+                let { picks: allPicks, users } = getNormalizedData(currentData.record);
 
                 allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
                 allPicks.push({ userName: currentUser, matchId, team, frozen: true, timestamp: new Date().toISOString() });
@@ -1816,7 +1861,8 @@
                             const matchPicks = globalAllPicks.filter(p => p.matchId === m.id && p.userName !== 'ADMIN');
                             const correctPredictors = matchPicks.filter(p => p.team === m.winner).length;
                             const pct = (correctPredictors / eligibleUsersCount * 100).toFixed(2);
-                            const pctColor = parseFloat(pct) >= 50 ? 'text-green-400' : 'text-red-400';
+                            const pctValue = parseFloat(pct);
+                            const pctColor = (pctValue > 0 && pctValue <= 50) ? 'text-green-400' : 'text-red-400';
                             predPctHtml = `<button class="${pctColor} font-semibold hover:underline cursor-pointer transition-colors px-2 py-1 bg-brand-overlay rounded-lg hover:bg-brand-overlay2" onclick="showPredictionModal('${m.id}')">${pct}%</button>`;
                         }
                     }
@@ -1966,8 +2012,7 @@
             try {
                 const resPicks = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const picksDataBin = await resPicks.json();
-                const allPicks = picksDataBin.record.picks || [];
-                const users = picksDataBin.record.users || {};
+                const { picks: allPicks, users } = getNormalizedData(picksDataBin.record);
 
                 const matchId = match.id;
                 const winner = match.winner;
@@ -2087,8 +2132,7 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const data = await res.json();
-                const users = data.record.users || {};
-                const allPicks = data.record.picks || [];
+                const { picks: allPicks, users } = getNormalizedData(data.record);
 
                 users[name] = "0000"; // Default PIN
 
@@ -2118,8 +2162,7 @@
             try {
                 const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
                 const data = await res.json();
-                const users = data.record.users || {};
-                const allPicks = data.record.picks || [];
+                const { picks: allPicks, users } = getNormalizedData(data.record);
 
                 users[userName] = "0000";
 
