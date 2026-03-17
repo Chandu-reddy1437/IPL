@@ -11,6 +11,7 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -34,8 +35,6 @@
         }
     </script>
     <style>
-        /* ═══ THEME VARIABLES ═══ */
-
         :root,
         [data-theme="dark"] {
             --brand-navy: #0F172A;
@@ -113,7 +112,6 @@
             border: 1px solid var(--glass-border);
         }
 
-        /* ═══ ENHANCED SELECTED GLOW (Vibrant Indigo) ═══ */
         .selected-glow {
             box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5), 0 0 40px 12px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(99, 102, 241, 0.15);
             border-color: #6366F1 !important;
@@ -154,7 +152,6 @@
             color: white;
         }
 
-        /* Team Filter Logo Styles */
         .team-filter-item {
             position: relative;
             flex-shrink: 0;
@@ -251,20 +248,6 @@
             color: var(--text-secondary);
         }
 
-        .themed-input {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .themed-modal-bg {
-            background-color: var(--modal-backdrop);
-        }
-
-        .themed-modal {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-        }
 
         .themed-tooltip {
             background-color: var(--tooltip-bg);
@@ -281,6 +264,10 @@
             padding: 12px 16px;
             text-align: left;
             border-bottom: 1px solid var(--table-border);
+        }
+
+        .data-table .text-center {
+            text-align: center !important;
         }
 
         .data-table th {
@@ -401,29 +388,7 @@
                 <p class="text-brand-text text-sm mb-5">Predict and climb the leaderboard.</p>
                 <!-- Team Filter Circular Logos -->
                 <div class="flex items-center gap-4 overflow-x-auto no-scrollbar -mx-5 px-5 pb-4" id="teamFilters">
-                    <button class="team-filter-item active" data-team="All">
-                        <span class="team-filter-all">All</span>
-                    </button>
-                    <button class="team-filter-item" data-team="MI"><img alt="MI" src="./MI.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>MI</span>';" /></button>
-                    <button class="team-filter-item" data-team="CSK"><img alt="CSK" src="./CSK.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>CSK</span>';" /></button>
-                    <button class="team-filter-item" data-team="RCB"><img alt="RCB" src="./RCB.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RCB</span>';" /></button>
-                    <button class="team-filter-item" data-team="KKR"><img alt="KKR" src="./KKR.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>KKR</span>';" /></button>
-                    <button class="team-filter-item" data-team="SRH"><img alt="SRH" src="./SRH.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>SRH</span>';" /></button>
-                    <button class="team-filter-item" data-team="RR"><img alt="RR" src="./RR.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>RR</span>';" /></button>
-                    <button class="team-filter-item" data-team="GT"><img alt="GT" src="./GT.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>GT</span>';" /></button>
-                    <button class="team-filter-item" data-team="DC"><img alt="DC" src="./DC.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>DC</span>';" /></button>
-                    <button class="team-filter-item" data-team="PBKS"><img alt="PBKS" src="./PBKS.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>PBKS</span>';" /></button>
-                    <button class="team-filter-item" data-team="LSG"><img alt="LSG" src="./LSG.png"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>LSG</span>';" /></button>
+                    <!-- Dynamic -->
                 </div>
             </section>
             <div class="px-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="upcomingMatchesContainer">
@@ -433,9 +398,12 @@
 
         <!-- LEADERBOARD VIEW -->
         <div id="view-leaderboard" class="view-section">
-            <section class="px-5 pt-6 pb-4">
-                <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
-                <p class="text-brand-text text-sm">See who's leading the predictions.</p>
+            <section class="px-5 pt-6 pb-4 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
+                    <p class="text-brand-text text-sm">See who's leading the predictions.</p>
+                </div>
+                <div class="text-xs text-brand-text font-bold uppercase mb-1" id="leaderboardMatchesCount">Completed Matches: 0</div>
             </section>
             <div class="px-5">
                 <div class="bg-brand-muted rounded-2xl border border-brand-overlay overflow-hidden">
@@ -447,9 +415,9 @@
                                     <th>Player</th>
                                     <th class="text-center sortable" onclick="sortLeaderboard('points')">Points <span
                                             id="sort-points" class="text-[8px] ml-1">▼</span></th>
-                                    <th class="text-center sortable" onclick="sortLeaderboard('correct')">Correct/Total
+                                    <th class="text-center sortable" onclick="sortLeaderboard('correct')">Number of wins
                                         <span id="sort-correct" class="text-[8px] ml-1 hidden"></span></th>
-                                    <th class="text-center sortable" onclick="sortLeaderboard('scorePct')">Score % <span
+                                    <th class="text-center sortable" onclick="sortLeaderboard('scorePct')">Accuracy % <span
                                             id="sort-scorePct" class="text-[8px] ml-1 hidden"></span></th>
                                 </tr>
                             </thead>
@@ -458,28 +426,56 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Leaderboard Progress Graph -->
+                <div class="mt-8 bg-brand-muted rounded-2xl border border-brand-overlay p-4 sm:p-6 shadow-xl">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-primary">Win Progression</h3>
+                            <p class="text-xs text-brand-text">Cumulative wins over completed matches.</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto no-scrollbar -mx-2 px-2">
+                        <div class="relative h-[320px] min-w-[600px] sm:min-w-0 w-full">
+                            <canvas id="leaderboardChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Legend Label -->
+                    <div class="text-center mt-6 mb-2">
+                        <span class="text-[10px] text-brand-text font-black uppercase tracking-[0.2em]">Select Users to Compare</span>
+                    </div>
+                    <!-- Custom Interactive Legend -->
+                    <div id="chartLegend" class="flex flex-wrap gap-3 justify-center">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- MY RESULTS VIEW -->
         <div id="view-results" class="view-section">
             <section class="px-5 pt-6 pb-4">
-                <h2 class="text-2xl font-bold mb-1">My Performance</h2>
+                <div class="flex justify-between items-end mb-1">
+                    <h2 class="text-2xl font-bold">My Performance</h2>
+                    <div class="text-xs text-brand-text font-bold uppercase mb-1" id="myPerformanceMatchesCount">Completed Matches: 0</div>
+                </div>
                 <p class="text-brand-text text-sm mb-5">Track your prediction accuracy.</p>
-                <div class="grid grid-cols-3 gap-3 mb-5">
-                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
-                        <div class="text-2xl font-extrabold text-green-400" id="resCorrect">0</div>
-                        <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Correct
-                        </div>
+                <div class="grid grid-cols-4 gap-2 mb-5">
+                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                        <div class="text-lg font-extrabold text-green-400" id="resCorrect">0</div>
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">CORRECT</div>
                     </div>
-                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
-                        <div class="text-2xl font-extrabold text-red-400" id="resWrong">0</div>
-                        <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Wrong</div>
+                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                        <div class="text-lg font-extrabold text-red-400" id="resWrong">0</div>
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">WRONG</div>
                     </div>
-                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-4 text-center">
-                        <div class="text-2xl font-extrabold text-brand-accent" id="resAcc">0%</div>
-                        <div class="text-[10px] text-brand-text uppercase tracking-wider font-semibold mt-1">Accuracy
-                        </div>
+                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                        <div class="text-lg font-extrabold text-brand-primary" id="resAcc">0%</div>
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">ACCURACY%</div>
+                    </div>
+                    <div class="bg-brand-muted rounded-xl border border-brand-overlay p-2 text-center">
+                        <div class="text-lg font-extrabold text-brand-accent" id="resPoints">0</div>
+                        <div class="text-[12px] text-brand-text uppercase tracking-tighter font-bold mt-1">TOTAL POINTS WON</div>
                     </div>
                 </div>
             </section>
@@ -505,7 +501,7 @@
             </div>
         </div>
 
-        <!-- ADMIN VIEW -->
+        <!-- ADMIN MATCHES VIEW -->
         <div id="view-admin" class="view-section">
             <section class="px-5 pt-6 pb-4">
                 <div class="flex justify-between items-center mb-1">
@@ -520,10 +516,10 @@
                         <table class="data-table whitespace-nowrap w-full">
                             <thead class="bg-brand-darker/50">
                                 <tr>
-                                    <th class="!py-4">Match</th>
-                                    <th class="!py-4">Venue</th>
-                                    <th class="!py-4">Current Winner</th>
-                                    <th class="!py-4 text-right">Action</th>
+                                    <th class="!py-4 text-[15px]">Match</th>
+                                    <th class="!py-4 text-[15px]">Venue</th>
+                                    <th class="!py-4 text-[15px]">Current Winner</th>
+                                    <th class="!py-4 text-[15px] text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="adminMatchesBody">
@@ -534,12 +530,41 @@
                 </div>
             </section>
         </div>
+
+        <!-- ADMIN USERS VIEW -->
+        <div id="view-admin-users" class="view-section">
+            <section class="px-5 pt-6 pb-4">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-2xl font-bold">Manage Users</h2>
+                    <button onclick="logoutAdmin()"
+                        class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
+                </div>
+                <p class="text-brand-text text-sm mb-6">Add new users or manage existing ones.</p>
+
+                <div class="bg-brand-muted rounded-2xl border border-brand-overlay overflow-hidden shadow-xl">
+                    <div class="overflow-x-auto">
+                        <table class="data-table whitespace-nowrap w-full">
+                            <thead class="bg-brand-darker/50">
+                                <tr>
+                                    <th class="!py-4">User Name</th>
+                                    <th class="!py-4 text-center">Current PIN</th>
+                                    <th class="!py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersBody">
+                                <!-- JS Injected: Add User Row + User List -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 
-    <!-- ═══════════════ BOTTOM NAVIGATION ═══════════════ -->
+    <!-- ═══════════════ BOTTOM NAVIGATION (Regular) ═══════════════ -->
     <nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-brand-overlay pb-[env(safe-area-inset-bottom)] pt-3 px-8 flex justify-between items-center z-50"
         id="bottomNav">
-        <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-accent active" href="#"
+        <a class="bottom-nav-item flex flex-col items-center gap-1 text-brand-accent" href="#"
             onclick="switchView('upcoming'); return false;">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
@@ -562,6 +587,21 @@
                     stroke-linejoin="round"></path>
             </svg>
             <span class="text-[10px] font-bold">My Results</span>
+        </a>
+    </nav>
+
+    <!-- ═══════════════ BOTTOM NAVIGATION (Admin) ═══════════════ -->
+    <nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-brand-overlay pb-[env(safe-area-inset-bottom)] pt-3 px-16 flex justify-around items-center z-50 hidden"
+        id="adminBottomNav">
+        <a class="admin-nav-item flex flex-col items-center gap-1 text-brand-accent" href="#"
+            onclick="switchView('admin'); return false;">
+            <span class="material-symbols-outlined">sports_cricket</span>
+            <span class="text-[10px] font-bold">Matches</span>
+        </a>
+        <a class="admin-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-brand-primary transition-colors"
+            href="#" onclick="switchView('admin-users'); return false;">
+            <span class="material-symbols-outlined">group</span>
+            <span class="text-[10px] font-bold">Users</span>
         </a>
     </nav>
 
@@ -598,6 +638,42 @@
                     class="w-full bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-4 rounded-xl shadow-lg transition-all text-lg"
                     id="loginBtn" onclick="saveName()">
                     Let's Go
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ CHANGE PIN MODAL ═══════════════ -->
+    <div class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center px-4" id="changePinModal">
+        <div class="fixed inset-0 bg-brand-darker/95 backdrop-blur-md"></div>
+        <div class="modal-inner relative bg-brand-muted border-2 border-orange-500/30 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-8">
+            <div class="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <span class="material-symbols-outlined text-orange-500 text-3xl">priority_high</span>
+            </div>
+            <h3 class="text-2xl font-black text-center mb-2">Change Password</h3>
+            <p class="text-brand-text text-sm text-center mb-8 leading-relaxed">Your account is using the default PIN. 
+                <br><span class="text-orange-400 font-bold italic">Please set a new 4-digit numeric PIN.</span></p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="sr-only" for="newPinInput">New PIN</label>
+                    <input
+                        class="block w-full rounded-xl bg-brand-darker border border-brand-overlay text-brand-primary focus:border-orange-500 focus:ring-orange-500 text-center text-2xl tracking-[1em] py-4 px-4"
+                        id="newPinInput" placeholder="NEW PIN" type="password" maxlength="4" pattern="\d{4}"
+                        inputmode="numeric" />
+                </div>
+                <div>
+                    <label class="sr-only" for="confirmPinInput">Confirm PIN</label>
+                    <input
+                        class="block w-full rounded-xl bg-brand-darker border border-brand-overlay text-brand-primary focus:border-orange-500 focus:ring-orange-500 text-center text-2xl tracking-[1em] py-4 px-4"
+                        id="confirmPinInput" placeholder="RE-ENTER" type="password" maxlength="4" pattern="\d{4}"
+                        inputmode="numeric" onkeydown="if(event.key==='Enter') saveNewPin()" />
+                </div>
+
+                <button
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-brand-darker font-black py-4 rounded-xl shadow-lg transition-all text-lg mt-4"
+                    id="changePinBtn" onclick="saveNewPin()">
+                    Set New PIN
                 </button>
             </div>
         </div>
@@ -788,43 +864,78 @@
             } catch (err) { console.error(err); }
         }
 
-        const JSONBIN_CONFIG = { headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY } };
 
         // ─── NAVIGATION ──────────────────────────
         function switchView(viewName) {
-            if (currentUser === 'ADMIN' && viewName !== 'admin') return;
+            if (currentUser === 'ADMIN' && !viewName.startsWith('admin')) return;
 
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(`view-${viewName}`).classList.add('active');
 
             const nav = document.getElementById('bottomNav');
+            const navAdmin = document.getElementById('adminBottomNav');
+            
             if (currentUser === 'ADMIN') {
                 if (nav) nav.style.display = 'none';
+                if (navAdmin) {
+                    navAdmin.style.display = 'flex';
+                    navAdmin.classList.remove('hidden');
+                    
+                    document.querySelectorAll('.admin-nav-item').forEach(el => {
+                        el.classList.remove('text-brand-accent');
+                        el.classList.add('text-brand-text');
+                    });
+                    
+                    const adminIdx = viewName === 'admin' ? 0 : 1;
+                    const adminNavItems = document.querySelectorAll('.admin-nav-item');
+                    if (adminNavItems[adminIdx]) {
+                        adminNavItems[adminIdx].classList.remove('text-brand-text');
+                        adminNavItems[adminIdx].classList.add('text-brand-accent');
+                    }
+                }
             } else {
-                if (nav) nav.style.display = 'flex';
-                document.querySelectorAll('.bottom-nav-item').forEach(el => {
-                    el.classList.remove('text-brand-accent');
-                    el.classList.add('text-brand-text');
-                });
-                const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
-                const navItems = document.querySelectorAll('.bottom-nav-item');
-                if (navItems[idx]) {
-                    navItems[idx].classList.remove('text-brand-text');
-                    navItems[idx].classList.add('text-brand-accent');
+                if (navAdmin) navAdmin.style.display = 'none';
+                if (nav) {
+                    nav.style.display = 'flex';
+                    document.querySelectorAll('.bottom-nav-item').forEach(el => {
+                        el.classList.remove('text-brand-accent');
+                        el.classList.add('text-brand-text');
+                    });
+                    const idx = viewName === 'upcoming' ? 0 : viewName === 'leaderboard' ? 1 : 2;
+                    const navItems = document.querySelectorAll('.bottom-nav-item');
+                    if (navItems[idx]) {
+                        navItems[idx].classList.remove('text-brand-text');
+                        navItems[idx].classList.add('text-brand-accent');
+                    }
                 }
             }
 
             if (viewName === 'leaderboard') fetchLeaderboard();
             if (viewName === 'results') renderMyResults();
             if (viewName === 'admin') renderAdminView();
+            if (viewName === 'admin-users') renderAdminUsersView();
         }
 
         function setupFilters() {
-            document.querySelectorAll('.team-filter-item').forEach(btn => {
+            const container = document.getElementById('teamFilters');
+            if (!container) return;
+
+            const teams = ['All', ...Object.values(TEAM_ABBR)];
+            container.innerHTML = teams.map(team => {
+                if (team === 'All') {
+                    return `<button class="team-filter-item active" data-team="All"><span class="team-filter-all">All</span></button>`;
+                }
+                return `
+                    <button class="team-filter-item" data-team="${team}">
+                        <img alt="${team}" src="./${team}.png" 
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'team-filter-all\'>${team}</span>';" />
+                    </button>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.team-filter-item').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.team-filter-item').forEach(b => {
-                        b.classList.remove('active');
-                    });
+                    container.querySelectorAll('.team-filter-item').forEach(b => b.classList.remove('active'));
                     e.currentTarget.classList.add('active');
                     activeFilter = e.currentTarget.dataset.team;
                     renderUpcomingMatches();
@@ -835,7 +946,7 @@
         // ─── LOGIN ──────────────────────────
         function promptLogin() {
             document.getElementById('loginModal').classList.add('active');
-            document.getElementById('loginInput').value = currentUser || '';
+            document.getElementById('loginInput').value = '';
             document.getElementById('loginPin').value = '';
             checkUserStatus();
             setTimeout(() => document.getElementById('loginInput').focus(), 100);
@@ -863,13 +974,15 @@
             }
         }
 
+        let pendingUser = null; // Store user during PIN change process
+
         async function saveName() {
             const name = document.getElementById('loginInput').value.trim().toUpperCase();
             const pin = document.getElementById('loginPin').value.trim();
             const loginBtn = document.getElementById('loginBtn');
 
             if (!name) { alert('Please enter your name'); return; }
-            if (!/^\d{4}$/.test(pin)) { alert('Please enter a 4-digit PIN'); return; }
+            if (!/^\d{4}$/.test(pin)) { alert('Please enter your 4-digit PIN'); return; }
 
             const originalBtnText = loginBtn.textContent;
             loginBtn.textContent = 'Verifying...';
@@ -889,6 +1002,15 @@
                         loginBtn.disabled = false;
                         return;
                     }
+                    
+                    // If validated and Pin was 0000, trigger Change PIN Modal
+                    if (pin === '0000') {
+                        pendingUser = { name, originalPicks: allPicks };
+                        document.getElementById('loginModal').classList.remove('active');
+                        document.getElementById('changePinModal').classList.add('active');
+                        document.getElementById('newPinInput').focus();
+                        return;
+                    }
                 } else {
                     // Registration
                     users[name] = pin;
@@ -901,6 +1023,13 @@
                         alert('Failed to register user.');
                         loginBtn.textContent = originalBtnText;
                         loginBtn.disabled = false;
+                        return;
+                    }
+                    // If newly registered with 0000 (though unlikely unless admin added), trigger change pin
+                    if (pin === '0000') {
+                        pendingUser = { name, originalPicks: allPicks };
+                        document.getElementById('loginModal').classList.remove('active');
+                        document.getElementById('changePinModal').classList.add('active');
                         return;
                     }
                 }
@@ -930,6 +1059,55 @@
             }
         }
 
+        async function saveNewPin() {
+            const p1 = document.getElementById('newPinInput').value.trim();
+            const p2 = document.getElementById('confirmPinInput').value.trim();
+            const btn = document.getElementById('changePinBtn');
+
+            if (!/^\d{4}$/.test(p1)) { alert('New PIN must be a 4-digit numeric value'); return; }
+            if (p1 !== p2) { alert('PINs do not match! Please re-enter.'); return; }
+            if (p1 === '0000') { alert('Please choose a PIN other than 0000'); return; }
+
+            const originalText = btn.textContent;
+            btn.textContent = 'Updating...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const data = await res.json();
+                const users = data.record.users || {};
+                const allPicks = data.record.picks || [];
+
+                if (pendingUser) {
+                    users[pendingUser.name] = p1;
+                    const updateRes = await fetch(JSONBIN_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                        body: JSON.stringify({ picks: allPicks, users: users })
+                    });
+
+                    if (updateRes.ok) {
+                        alert('Password updated successfully! Please login with your new PIN.');
+                        document.getElementById('changePinModal').classList.remove('active');
+                        // Return to login with name auto-populated
+                        document.getElementById('loginInput').value = pendingUser.name;
+                        document.getElementById('loginPin').value = '';
+                        document.getElementById('loginModal').classList.add('active');
+                        pendingUser = null;
+                        checkUserStatus();
+                    } else {
+                        alert('Failed to update PIN.');
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function logoutAdmin() {
             localStorage.removeItem('ipl_username');
             localStorage.removeItem('ipl_pin');
@@ -955,25 +1133,41 @@
 
                 const allMatches = schedData.record.matches || [];
                 const resultsMap = {};
-                allMatches.forEach(m => { if (m.winner !== null) resultsMap[m.id] = m.winner; });
+                allMatches.forEach(m => { 
+                    if (m.winner !== null && m.winner !== 'No Result') {
+                        resultsMap[m.id] = m.winner; 
+                    }
+                });
+
+                const decisiveMatches = allMatches.filter(m => m.winner !== null && m.winner !== 'No Result');
+                const decisiveMatchCount = decisiveMatches.length;
 
                 const allPicks = binData.record.picks || [];
+                const usersMap = binData.record.users || {};
+                const playersList = [...new Set(allPicks.map(p => p.userName))].filter(u => u !== 'ADMIN');
 
                 const userStats = {};
+                // Initialize all known players with 0 stats
+                playersList.forEach(u => {
+                    userStats[u] = { name: u, correct: 0, points: 0 };
+                });
+
                 allPicks.forEach(p => {
-                    if (!userStats[p.userName]) userStats[p.userName] = { name: p.userName, correct: 0, total: 0, points: 0 };
-                    if (resultsMap[p.matchId] !== undefined) {
-                        userStats[p.userName].total++;
-                        if (p.team === resultsMap[p.matchId]) {
+                    if (p.userName === 'ADMIN') return;
+                    if (!userStats[p.userName]) userStats[p.userName] = { name: p.userName, correct: 0, points: 0 };
+                    
+                    const match = resultsMap[p.matchId];
+                    if (match !== undefined) {
+                        if (p.team === match) {
                             userStats[p.userName].correct++;
-                            userStats[p.userName].points += (p.points || 0);
                         }
+                        userStats[p.userName].points += (p.points || 0);
                     }
                 });
 
                 const leaderboard = Object.values(userStats).map(stat => {
-                    const scorePct = stat.total > 0 ? ((stat.correct / stat.total) * 100).toFixed(1) : "0.0";
-                    return { ...stat, scorePct: parseFloat(scorePct) };
+                    const scorePct = decisiveMatchCount > 0 ? ((stat.correct / decisiveMatchCount) * 100).toFixed(2) : "0.00";
+                    return { ...stat, total: decisiveMatchCount, scorePct: parseFloat(scorePct) };
                 });
 
                 leaderboard.sort((a, b) => b.points !== a.points ? b.points - a.points : b.correct - a.correct);
@@ -981,10 +1175,20 @@
 
                 leaderboardData = leaderboard;
                 renderLeaderboardTable();
+                renderLeaderboardChart(allMatches, allPicks);
+                updateGlobalMatchCounts(allMatches);
             } catch (err) {
-                console.error(err);
+                console.error('Leaderboard Fetch Error:', err);
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-red-400">Failed to load leaderboard</td></tr>';
             }
+        }
+
+        function updateGlobalMatchCounts(allMatches) {
+            const completed = allMatches.filter(m => m.winner !== null && m.winner !== 'No Result').length;
+            ['leaderboardMatchesCount', 'myPerformanceMatchesCount'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = `Completed Matches: ${completed}`;
+            });
         }
 
         function sortLeaderboard(field) {
@@ -1030,10 +1234,200 @@
                 <td class="font-bold text-brand-accent">#${l.rank}</td>
                 <td class="font-medium">${l.name} ${l.name === currentUser ? '<span class="ml-1.5 text-[10px] bg-brand-accent text-brand-darker px-2 py-0.5 rounded-full font-bold">YOU</span>' : ''}</td>
                 <td class="text-brand-accent font-black text-center">${Math.round(l.points)}</td>
-                <td class="text-green-400 font-semibold text-center">${l.correct}/${l.total}</td>
-                <td class="text-brand-text text-center font-semibold">${l.scorePct}%</td>
+                <td class="text-green-400 font-semibold text-center">${l.correct}</td>
+                <td class="text-brand-text text-center font-semibold">${l.scorePct.toFixed(2)}%</td>
             </tr>
         `).join('');
+        }
+
+        // ─── LEADERBOARD CHART ──────────────────────────
+        let leaderboardChartInstance = null;
+        let chartUserColors = {};
+
+        function renderLeaderboardChart(allMatches, allPicks) {
+            const canvas = document.getElementById('leaderboardChart');
+            if (!canvas) return;
+
+            // Filter only completed matches with a result (No Result matches ignored)
+            const completedMatches = allMatches
+                .filter(m => m.winner !== null && m.winner !== 'No Result')
+                .sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+
+            if (completedMatches.length === 0) return;
+
+            // Identify all non-admin players
+            const players = [...new Set(allPicks.map(p => p.userName))].filter(u => u !== 'ADMIN');
+            
+            // Generate labels for X-axis (Match Index or Team Abbr)
+            const labels = completedMatches.map((m, i) => `M${i+1}: ${TEAM_ABBR[m.teamA]||m.teamA} v ${TEAM_ABBR[m.teamB]||m.teamB}`);
+            
+            // Build datasets for each player
+            const datasets = players.map((player, idx) => {
+                if (!chartUserColors[player]) {
+                    // Generate a nice color if not yet assigned
+                    const hue = (idx * 137.5) % 360; // Spread hues evenly
+                    chartUserColors[player] = `hsl(${hue}, 70%, 60%)`;
+                }
+
+                let cumulativeWins = 0;
+                const data = [0]; // Start with 0 wins at Match 0
+                
+                completedMatches.forEach(match => {
+                    const pick = allPicks.find(p => p.matchId === match.id && p.userName === player);
+                    if (pick && pick.team === match.winner) {
+                        cumulativeWins++;
+                    }
+                    data.push(cumulativeWins);
+                });
+
+                return {
+                    label: player,
+                    data: data,
+                    borderColor: chartUserColors[player],
+                    backgroundColor: chartUserColors[player] + '22', // Subtle fill
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    stepped: true,
+                    tension: 0,
+                    hidden: false // Visible by default
+                };
+            });
+
+            // Prepend a "Start" label for the 0-point
+            const fullLabels = ['Start', ...labels];
+
+            if (leaderboardChartInstance) {
+                leaderboardChartInstance.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            leaderboardChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: fullLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: false }, // Use our custom interactive legend instead
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            titleColor: '#F97316',
+                            bodyColor: '#ffffff',
+                            padding: 10,
+                            boxPadding: 5,
+                            usePointStyle: true,
+                            bodyFont: { weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)', drawOnChartArea: false },
+                            ticks: { 
+                                color: '#94A3B8', 
+                                font: { size: 9, weight: '500' },
+                                maxRotation: 45,
+                                minRotation: 0,
+                                autoSkip: false // We use horizontal scroll instead
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { 
+                                stepSize: 1,
+                                color: '#94A3B8',
+                                font: { weight: 'bold', size: 10 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'WINS',
+                                color: '#F97316',
+                                font: { size: 10, weight: 'black' }
+                            }
+                        }
+                    }
+                }
+            });
+
+            renderChartLegend(players);
+        }
+
+        let isComparisonMode = false;
+
+        function renderChartLegend(players) {
+            const container = document.getElementById('chartLegend');
+            if (!container) return;
+
+            let html = `
+                <button onclick="resetLeaderboardChart()" 
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-brand-accent bg-brand-accent/10 text-brand-accent hover:bg-brand-accent hover:text-brand-darker transition-all hover:scale-105">
+                    <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                    <span class="text-xs font-bold uppercase tracking-widest">Reset All</span>
+                </button>
+            `;
+
+            html += players.map(player => {
+                const color = chartUserColors[player];
+                return `
+                    <button onclick="toggleChartDataset('${player}')" id="legend-${player}"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full border border-brand-overlay bg-brand-overlay/20 transition-all hover:scale-105 active:scale-95"
+                        data-active="true"
+                        style="border-color: ${color}">
+                        <div class="w-3 h-3 rounded-full shadow-[0_0_8px_${color}]" style="background-color: ${color}"></div>
+                        <span class="text-xs font-black text-brand-primary uppercase tracking-tight">${player}</span>
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function toggleChartDataset(playerName) {
+            if (!leaderboardChartInstance) return;
+
+            // If not in comparison mode, hide all others and isolate this one
+            if (!isComparisonMode) {
+                isComparisonMode = true;
+                leaderboardChartInstance.data.datasets.forEach(ds => {
+                    ds.hidden = (ds.label !== playerName);
+                    const btn = document.getElementById(`legend-${ds.label}`);
+                    if (btn) {
+                        if (ds.hidden) btn.classList.add('opacity-40');
+                        else btn.classList.remove('opacity-40');
+                    }
+                });
+            } else {
+                // Toggling in comparison mode
+                const dataset = leaderboardChartInstance.data.datasets.find(ds => ds.label === playerName);
+                const btn = document.getElementById(`legend-${playerName}`);
+                if (dataset && btn) {
+                    dataset.hidden = !dataset.hidden;
+                    btn.classList.toggle('opacity-40');
+                }
+            }
+            leaderboardChartInstance.update();
+        }
+
+        function resetLeaderboardChart() {
+            if (!leaderboardChartInstance) return;
+
+            isComparisonMode = false;
+            leaderboardChartInstance.data.datasets.forEach(ds => {
+                ds.hidden = false;
+                const btn = document.getElementById(`legend-${ds.label}`);
+                if (btn) {
+                    btn.classList.remove('opacity-40');
+                }
+            });
+            leaderboardChartInstance.update();
         }
 
         // ─── H2H ──────────────────────────
@@ -1103,7 +1497,7 @@
             if (globalAllPlayers.size === 0) {
                 tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-brand-text">No predictions available.</td></tr>';
             } else {
-                const rows = Array.from(globalAllPlayers).map(player => {
+                const rows = Array.from(globalAllPlayers).filter(u => u !== 'ADMIN').map(player => {
                     const pick = matchPicks.find(p => p.userName === player);
                     const pickStr = pick ? (TEAM_ABBR[pick.team] || pick.team) : '-';
 
@@ -1288,15 +1682,6 @@
             }
         }
 
-        // Keep old submitPick for compatibility
-        async function submitPick(matchId) {
-            if (!currentUser) { promptLogin(); return; }
-            const selectEl = document.getElementById(`pick-${matchId}`);
-            if (!selectEl) return;
-            const team = selectEl.value;
-            if (!team) { alert('Please select a team'); return; }
-            await submitPickDirect(matchId, team);
-        }
 
         // ─── COUNTDOWN TIMER ──────────────────────────
         function updateCountdowns() {
@@ -1351,8 +1736,8 @@
                 allPicks = globalAllPicks;
             }
 
-            // Get all unique players (anyone who ever made a pick)
-            const allPlayers = new Set(allPicks.map(p => p.userName));
+            // Get all unique players (anyone who ever made a pick), excluding ADMIN
+            const allPlayers = new Set(allPicks.map(p => p.userName).filter(u => u !== 'ADMIN'));
             globalAllPlayers = allPlayers;
             const totalPlayers = allPlayers.size;
 
@@ -1366,28 +1751,37 @@
                 let predPctHtml = '<span class="text-brand-text">—</span>';
 
                 if (m.winner !== null) {
-                    if (myPick) total++;
-                    if (myPick && myPick.team === m.winner) {
-                        correct++;
-                        statusMsg = `<span class="text-green-400 font-semibold">Correct ✓</span>`;
-                    } else if (myPick && myPick.team !== m.winner) {
-                        wrong++;
-                        statusMsg = `<span class="text-red-400 font-semibold">Wrong ✗</span>`;
+                    if (m.winner === 'No Result') {
+                        statusMsg = `<span class="text-brand-text font-semibold italic">No Result</span>`;
                     } else {
-                        statusMsg = `<span class="text-brand-text">${TEAM_ABBR[m.winner] || m.winner}</span>`;
-                    }
+                        if (myPick) total++;
+                        if (myPick && myPick.team === m.winner) {
+                            correct++;
+                            statusMsg = `<span class="text-green-400 font-semibold">Correct ✓</span>`;
+                        } else if (myPick && myPick.team !== m.winner) {
+                            wrong++;
+                            statusMsg = `<span class="text-red-400 font-semibold">Wrong ✗</span>`;
+                        } else {
+                            statusMsg = `<span class="text-brand-text">${TEAM_ABBR[m.winner] || m.winner}</span>`;
+                        }
 
-                    // Calculate Prediction% for this match
-                    if (totalPlayers > 0) {
-                        const matchPicks = allPicks.filter(p => p.matchId === m.id);
-                        const correctPredictors = matchPicks.filter(p => p.team === m.winner).length;
-                        const pct = Math.round((correctPredictors / totalPlayers) * 100);
-                        const pctColor = pct >= 50 ? 'text-green-400' : 'text-red-400';
-                        predPctHtml = `<button class="${pctColor} font-semibold hover:underline cursor-pointer transition-colors px-2 py-1 bg-brand-overlay rounded-lg hover:bg-brand-overlay2" onclick="showPredictionModal('${m.id}')">${pct}%</button>`;
+                        // Calculate Prediction% for this match
+                        if (totalPlayers > 0) {
+                            const matchPicks = allPicks.filter(p => p.matchId === m.id && p.userName !== 'ADMIN');
+                            const correctPredictors = matchPicks.filter(p => p.team === m.winner).length;
+                            const pct = (correctPredictors / totalPlayers * 100).toFixed(2);
+                            const pctColor = parseFloat(pct) >= 50 ? 'text-green-400' : 'text-red-400';
+                            predPctHtml = `<button class="${pctColor} font-semibold hover:underline cursor-pointer transition-colors px-2 py-1 bg-brand-overlay rounded-lg hover:bg-brand-overlay2" onclick="showPredictionModal('${m.id}')">${pct}%</button>`;
+                        }
                     }
                 }
 
-                const pointsDisplay = myPick && myPick.points ? `<span class="text-brand-accent font-black">+${Math.round(myPick.points)}</span>` : '<span class="text-brand-text">0</span>';
+                const pts = myPick && myPick.points !== undefined ? Math.round(myPick.points) : 0;
+                const pointsDisplay = pts > 0 
+                    ? `<span class="text-green-400 font-black">+${pts}</span>` 
+                    : pts < 0 
+                        ? `<span class="text-red-400 font-black">${pts}</span>`
+                        : `<span class="text-brand-text">${pts}</span>`;
 
                 return `
                 <tr>
@@ -1407,13 +1801,24 @@
                 tbody.innerHTML = rows.reverse().join('');
             }
 
+            const decisiveMatchCount = scheduleData.filter(m => m.winner !== null && m.winner !== 'No Result').length;
+
             const elCorrect = document.getElementById('resCorrect');
             const elWrong = document.getElementById('resWrong');
             const elAcc = document.getElementById('resAcc');
+            const elPoints = document.getElementById('resPoints');
+
             if (elCorrect) elCorrect.textContent = correct;
             if (elWrong) elWrong.textContent = wrong;
-            const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+            
+            const totalPoints = allPicks.filter(p => p.userName === currentUser)
+                                       .reduce((sum, p) => sum + (p.points || 0), 0);
+            if (elPoints) elPoints.textContent = Math.round(totalPoints);
+            
+            const acc = decisiveMatchCount > 0 ? (correct / decisiveMatchCount * 100).toFixed(2) : "0.00";
             if (elAcc) elAcc.textContent = acc + '%';
+            
+            updateGlobalMatchCounts(scheduleData);
         }
 
         // ─── ADMIN VIEW ──────────────────────────
@@ -1421,37 +1826,40 @@
             const tbody = document.getElementById('adminMatchesBody');
             if (!tbody) return;
 
-            tbody.innerHTML = scheduleData.map((m, idx) => {
+            // Filter out completed/rewarded matches
+            const remainingMatches = scheduleData.map((m, idx) => ({ ...m, originalIdx: idx }))
+                .filter(m => {
+                    const matchPicks = globalAllPicks.filter(p => p.matchId === m.id);
+                    return !(matchPicks.length > 0 && matchPicks.some(p => p.points !== undefined));
+                });
+
+            tbody.innerHTML = remainingMatches.map((m) => {
+                const idx = m.originalIdx;
                 const teamA = m.teamA;
                 const teamB = m.teamB;
                 const currentWinner = m.winner || 'None';
-
-                // Check if this match has been rewarded
-                const matchPicks = globalAllPicks.filter(p => p.matchId === m.id);
-                // We consider it rewarded if ANY pick for this match has a 'points' property defined
-                const isRewarded = matchPicks.length > 0 && matchPicks.some(p => p.points !== undefined);
                 const hasWinner = m.winner !== null;
 
                 return `
                 <tr class="border-b border-brand-overlay/50 last:border-0 hover:bg-brand-overlay/10">
                     <td class="py-4">
                         <div class="flex flex-col">
-                            <span class="font-bold text-sm">${TEAM_ABBR[teamA] || teamA} vs ${TEAM_ABBR[teamB] || teamB}</span>
-                            <span class="text-[10px] text-brand-text">${m.dateLabel}</span>
+                            <span class="font-bold text-sm text-brand-primary">${TEAM_ABBR[teamA] || teamA} vs ${TEAM_ABBR[teamB] || teamB}</span>
+                            <span class="text-[10px] text-brand-text opacity-70">${m.dateLabel}</span>
                         </div>
                     </td>
                     <td class="py-4 text-xs themed-text truncate max-w-[150px]">${m.venue}</td>
-                    <td class="py-4 font-semibold text-brand-primary text-sm">${TEAM_ABBR[currentWinner] || currentWinner}</td>
-                    <td class="py-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <select id="winner-select-${idx}" ${isRewarded ? 'disabled' : ''} class="bg-brand-darker border border-brand-overlay text-xs rounded-lg px-2 py-1 focus:ring-brand-accent focus:border-brand-accent">
+                    <td class="py-4 font-bold text-brand-accent text-sm">${TEAM_ABBR[currentWinner] || currentWinner}</td>
+                    <td class="py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <select id="winner-select-${idx}" class="bg-brand-darker border border-brand-overlay text-xs rounded-lg pl-3 pr-8 py-2 focus:ring-brand-accent focus:border-brand-accent outline-none min-w-[120px] appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23F97316%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;">
                                 <option value="">Set Winner</option>
                                 <option value="${teamA}" ${m.winner === teamA ? 'selected' : ''}>${TEAM_ABBR[teamA] || teamA}</option>
                                 <option value="${teamB}" ${m.winner === teamB ? 'selected' : ''}>${TEAM_ABBR[teamB] || teamB}</option>
                                 <option value="No Result" ${m.winner === 'No Result' ? 'selected' : ''}>No Result</option>
                             </select>
-                            <button onclick="saveWinner(${idx})" ${isRewarded ? 'disabled' : ''} class="bg-brand-accent text-brand-darker font-bold px-3 py-1 rounded text-xs hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
-                            <button onclick="rewardWinner(${idx})" ${!hasWinner || isRewarded ? 'disabled' : ''} class="bg-green-500 text-brand-darker font-bold px-3 py-1 rounded text-xs hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Reward</button>
+                            <button onclick="saveWinner(${idx})" class="bg-brand-accent text-slate-950 font-black px-4 py-1.5 rounded-lg text-xs hover:bg-orange-600 transition-all shadow-md active:scale-95">Save</button>
+                            <button onclick="rewardWinner(${idx})" ${!hasWinner ? 'disabled' : ''} class="bg-green-600 text-white font-black px-4 py-1.5 rounded-lg text-xs hover:bg-green-700 transition-all shadow-md active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">Reward</button>
                         </div>
                     </td>
                 </tr>
@@ -1516,15 +1924,44 @@
                 
                 const matchId = match.id;
                 const winner = match.winner;
+                const isNoResult = (winner === 'No Result');
+                const userList = Object.keys(users).filter(u => u !== 'ADMIN');
+                const totalUserCount = userList.length;
+                const totalPool = totalUserCount * 100;
 
-                const matchPicks = allPicks.filter(p => p.matchId === matchId);
-                const totalPool = matchPicks.length * 100;
+                const matchPicks = allPicks.filter(p => p.matchId === matchId && p.userName !== 'ADMIN');
                 const correctPicks = matchPicks.filter(p => p.team === winner);
-                const pointsPerWinner = correctPicks.length > 0 ? (totalPool / correctPicks.length) : 0;
+                const pointsPerWinner = (!isNoResult && correctPicks.length > 0) ? (totalPool / correctPicks.length) : 0;
 
+                const usersWithEntry = new Set();
                 allPicks.forEach(p => {
                     if (p.matchId === matchId) {
-                        p.points = p.team === winner ? pointsPerWinner : 0;
+                        if (p.userName === 'ADMIN') {
+                            p.points = 0; // Admin always gets 0
+                        } else if (isNoResult) {
+                            p.points = 0; // No points for No Result
+                        } else {
+                            // Net points = Reward (if winner) - Entry Fee (100)
+                            p.points = (p.team === winner ? pointsPerWinner : 0) - 100;
+                        }
+                        usersWithEntry.add(p.userName);
+                    }
+                });
+
+                // Those who didn't predict (missed) (excluding ADMIN)
+                userList.forEach(u => {
+                    if (!usersWithEntry.has(u)) {
+                        allPicks.push({
+                            userName: u,
+                            matchId: matchId,
+                            team: "Missed",
+                            points: 0, // Default to 0, if result exists handled below
+                            timestamp: new Date().toISOString()
+                        });
+                        // If it's not a 'No Result' and they missed, they lose 100
+                        if (!isNoResult) {
+                            allPicks[allPicks.length - 1].points = -100;
+                        }
                     }
                 });
 
@@ -1548,6 +1985,109 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
+        }
+        // ─── ADMIN USERS VIEW ──────────────────────────
+        function renderAdminUsersView() {
+            const tbody = document.getElementById('adminUsersBody');
+            if (!tbody) return;
+
+            // Sort users to show others in reverse order
+            const usersList = Object.keys(globalUsers).filter(u => u !== 'ADMIN').sort().reverse();
+            
+            // First Row: Add User Row
+            let html = `
+                <tr class="bg-brand-accent/5 border-b-2 border-brand-accent/20">
+                    <td class="py-4 px-4">
+                        <input type="text" id="newUserName" placeholder="Enter New Name..." 
+                            class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-lg px-3 py-2 text-sm focus:border-brand-accent outline-none font-bold uppercase"
+                            onkeydown="if(event.key==='Enter') addAdminUser()">
+                    </td>
+                    <td class="py-4 text-center">
+                        <span class="text-[10px] text-brand-text font-bold uppercase tracking-widest">Pin: 0000</span>
+                    </td>
+                    <td class="py-4 text-right pr-4">
+                        <button onclick="addAdminUser()" 
+                            class="bg-brand-accent text-slate-950 font-bold px-4 py-2 rounded-lg text-xs hover:bg-orange-600 transition-all shadow-md">
+                            Add User
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            // Existing Users
+            html += usersList.map(userName => `
+                <tr class="border-b border-brand-overlay/50 last:border-0 hover:bg-brand-overlay/10 transition-colors">
+                    <td class="py-4 px-4 font-bold text-sm text-brand-primary uppercase">${userName}</td>
+                    <td class="py-4 text-center font-mono text-brand-accent text-sm font-bold tracking-widest">${globalUsers[userName]}</td>
+                    <td class="py-4 text-right pr-4">
+                        <button onclick="resetUserPin('${userName}')" 
+                            class="text-[9px] font-bold text-brand-text uppercase border border-brand-overlay px-2 py-1.5 rounded-lg hover:border-brand-accent hover:text-brand-accent transition-all">
+                            Reset PIN
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            tbody.innerHTML = html;
+        }
+
+        async function addAdminUser() {
+            const nameInput = document.getElementById('newUserName');
+            const name = nameInput.value.trim().toUpperCase();
+            if (!name) { alert('Enter user name'); return; }
+            if (globalUsers[name]) { alert('User already exists'); return; }
+
+            try {
+                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const data = await res.json();
+                const users = data.record.users || {};
+                const allPicks = data.record.picks || [];
+
+                users[name] = "0000"; // Default PIN
+
+                const updateRes = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ picks: allPicks, users: users })
+                });
+
+                if (updateRes.ok) {
+                    globalUsers = users;
+                    nameInput.value = '';
+                    renderAdminUsersView();
+                    alert(`User ${name} added with PIN 0000`);
+                } else {
+                    alert('Failed to add user');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection error');
+            }
+        }
+
+        async function resetUserPin(userName) {
+            if (!confirm(`Reset PIN for ${userName} to 0000?`)) return;
+            
+            try {
+                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const data = await res.json();
+                const users = data.record.users || {};
+                const allPicks = data.record.picks || [];
+
+                users[userName] = "0000";
+
+                const updateRes = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ picks: allPicks, users: users })
+                });
+
+                if (updateRes.ok) {
+                    globalUsers = users;
+                    renderAdminUsersView();
+                    alert(`PIN reset for ${userName}`);
+                }
+            } catch (e) { console.error(e); }
         }
 
         // ─── START ──────────────────────────
