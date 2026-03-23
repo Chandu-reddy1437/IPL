@@ -526,7 +526,7 @@
         <div id="view-admin" class="view-section">
             <section class="px-5 pt-6 pb-4">
                 <div class="flex justify-between items-center mb-1">
-                    <h2 class="text-2xl font-bold">Admin Panel</h2>
+                    <h2 class="text-2xl font-bold">Set Winner</h2>
                     <button onclick="logoutAdmin()"
                         class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
                 </div>
@@ -548,6 +548,76 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ADMIN SCHEDULE VIEW -->
+        <div id="view-admin-schedule" class="view-section">
+            <section class="px-5 pt-6 pb-4">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-2xl font-bold">Set Schedule</h2>
+                    <button onclick="logoutAdmin()"
+                        class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
+                </div>
+                <p class="text-brand-text text-sm mb-6">Enter new match schedule.</p>
+
+                <div class="bg-brand-muted rounded-2xl border border-brand-overlay p-5 shadow-xl">
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap items-end gap-4">
+                            <!-- Team A -->
+                            <div class="flex-1 min-w-[120px]">
+                                <label class="block text-[10px] font-bold text-brand-text uppercase tracking-widest mb-1.5 ml-1">Team A (Home)</label>
+                                <input type="text" id="schTeamA" placeholder="Shortcut (e.g. MI)" 
+                                    class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none font-bold uppercase transition-all"
+                                    oninput="updateStadiumDropdown()">
+                            </div>
+                            <!-- Team B -->
+                            <div class="flex-1 min-w-[120px]">
+                                <label class="block text-[10px] font-bold text-brand-text uppercase tracking-widest mb-1.5 ml-1">Team B (Opponent)</label>
+                                <input type="text" id="schTeamB" placeholder="Shortcut (e.g. CSK)" 
+                                    class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none font-bold uppercase transition-all">
+                            </div>
+                            <!-- Date -->
+                            <div class="flex-1 min-w-[140px]">
+                                <label class="block text-[10px] font-bold text-brand-text uppercase tracking-widest mb-1.5 ml-1">Date (DD/MM/YY)</label>
+                                <div class="relative">
+                                    <input type="text" id="schDate" placeholder="DD/MM/YY" maxlength="8"
+                                        class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none font-bold transition-all"
+                                        oninput="formatDateInput(this)">
+                                    <input type="date" id="schDatePicker" tabindex="-1" class="absolute inset-0 opacity-0 cursor-pointer" oninput="schDate.value=formatDateFromPicker(this.value)">
+                                </div>
+                            </div>
+                            <!-- Time -->
+                            <div class="flex-1 min-w-[150px]">
+                                <label class="block text-[10px] font-bold text-brand-text uppercase tracking-widest mb-1.5 ml-1">Time (1/2)</label>
+                                <select id="schTime" class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent focus:ring-2 focus:ring-brand-accent outline-none font-bold transition-all appearance-none cursor-pointer">
+                                    <option value="">Select Time</option>
+                                    <option value="3:30 PM">1. 3:30 PM</option>
+                                    <option value="7:30 PM">2. 7:30 PM</option>
+                                </select>
+                            </div>
+                            <!-- Stadium -->
+                            <div class="flex-[1.5] min-w-[200px]">
+                                <label class="block text-[10px] font-bold text-brand-text uppercase tracking-widest mb-1.5 ml-1">Stadium (1/2)</label>
+                                <select id="schStadium" class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent focus:ring-2 focus:ring-brand-accent outline-none font-bold transition-all appearance-none cursor-pointer">
+                                    <option value="">Enter Team A First</option>
+                                </select>
+                            </div>
+                            <!-- Save Button -->
+                            <div class="w-full sm:w-auto">
+                                <button id="schSaveBtn" onclick="saveScheduleMatch()" 
+                                    class="w-full bg-brand-accent text-slate-950 font-black px-8 py-3.5 rounded-xl text-sm hover:bg-orange-600 transition-all shadow-lg active:scale-95 focus:ring-2 focus:ring-white outline-none">
+                                    Save Match
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Table / Info -->
+                <div class="mt-8 text-center text-brand-text text-xs italic">
+                    Note: Shortcuts: MI, CSK, KKR, SRH, RCB, GT, RR, DC, PBKS, LSG
                 </div>
             </section>
         </div>
@@ -612,12 +682,17 @@
     </nav>
 
     <!-- ═══════════════ BOTTOM NAVIGATION (Admin) ═══════════════ -->
-    <nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-brand-overlay pb-[env(safe-area-inset-bottom)] pt-3 px-16 flex justify-around items-center z-50 hidden"
+    <nav class="fixed bottom-0 left-0 right-0 glass-effect border-t border-brand-overlay pb-[env(safe-area-inset-bottom)] pt-3 px-8 flex justify-around items-center z-50 hidden"
         id="adminBottomNav">
         <a class="admin-nav-item flex flex-col items-center gap-1 text-brand-accent" href="#"
             onclick="switchView('admin'); return false;">
-            <span class="material-symbols-outlined">sports_cricket</span>
-            <span class="text-[10px] font-bold">Matches</span>
+            <span class="material-symbols-outlined">analytics</span>
+            <span class="text-[10px] font-bold">Set Winner</span>
+        </a>
+        <a class="admin-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-brand-primary transition-colors"
+            href="#" onclick="switchView('admin-schedule'); return false;">
+            <span class="material-symbols-outlined">calendar_month</span>
+            <span class="text-[10px] font-bold">Set Schedule</span>
         </a>
         <a class="admin-nav-item flex flex-col items-center gap-1 text-brand-text hover:text-brand-primary transition-colors"
             href="#" onclick="switchView('admin-users'); return false;">
@@ -860,6 +935,21 @@
             RR: 'bg-pink-900/30', DC: 'bg-blue-800/30', PBKS: 'bg-red-800/30', LSG: 'bg-cyan-900/30'
         };
 
+        const STADIUMS = {
+            'DC': ['Arun Jaitley Stadium, Delhi', 'Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam'],
+            'RR': ['Sawai Mansingh Stadium, Jaipur', 'Barsapara Cricket Stadium, Guwahati'],
+            'PBKS': ['Maharaja Yadavindra Singh International Cricket Stadium, New Chandigarh', 'Himachal Pradesh Cricket Association Stadium, Dharamsala'],
+            'RCB': ['M Chinnaswamy Stadium, Bengaluru', 'Shaheed Veer Narayan Singh International Stadium, Raipur'],
+            'LSG': ['Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow'],
+            'KKR': ['Eden Gardens, Kolkata'],
+            'CSK': ['MA Chidambaram Stadium, Chepauk, Chennai'],
+            'GT': ['Narendra Modi Stadium, Ahmedabad'],
+            'SRH': ['Rajiv Gandhi International Stadium, Uppal, Hyderabad'],
+            'MI': ['Wankhede Stadium, Mumbai']
+        };
+
+        const ABBR_TO_TEAM = Object.fromEntries(Object.entries(TEAM_ABBR).map(([k,v]) => [v,k]));
+
         // ─── THEME ──────────────────────────
         function initTheme() {
             const saved = localStorage.getItem('ipl_theme') || 'dark';
@@ -956,7 +1046,7 @@
                         el.classList.add('text-brand-text');
                     });
 
-                    const adminIdx = viewName === 'admin' ? 0 : 1;
+                    const adminIdx = viewName === 'admin' ? 0 : viewName === 'admin-schedule' ? 1 : 2;
                     const adminNavItems = document.querySelectorAll('.admin-nav-item');
                     if (adminNavItems[adminIdx]) {
                         adminNavItems[adminIdx].classList.remove('text-brand-text');
@@ -983,6 +1073,7 @@
             if (viewName === 'leaderboard') renderLeaderboard();
             if (viewName === 'results') renderMyResults();
             if (viewName === 'admin') renderAdminView();
+            if (viewName === 'admin-schedule') renderAdminScheduleView();
             if (viewName === 'admin-users') renderAdminUsersView();
         }
 
@@ -2242,6 +2333,320 @@
                     alert(`PIN reset for ${userName}`);
                 }
             } catch (e) { console.error(e); }
+        }
+
+        // ─── ADMIN SCHEDULE FUNCTIONS ──────────────────────────
+        function renderAdminScheduleView() {
+            // Reset form
+            document.getElementById('schTeamA').value = '';
+            document.getElementById('schTeamB').value = '';
+            document.getElementById('schDate').value = '';
+            document.getElementById('schTime').value = '';
+            updateStadiumDropdown();
+            setupScheduleKeyBindings();
+        }
+
+        function updateStadiumDropdown() {
+            const teamA = document.getElementById('schTeamA').value.trim().toUpperCase();
+            const select = document.getElementById('schStadium');
+            if (!teamA) {
+                select.innerHTML = '<option value="">Enter Team A First</option>';
+                select.setAttribute('tabindex', '0');
+                return;
+            }
+            const stadiums = STADIUMS[teamA] || [];
+
+            if (stadiums.length === 0) {
+                select.innerHTML = '<option value="">Enter Team A First</option>';
+                select.setAttribute('tabindex', '0');
+            } else if (stadiums.length === 1) {
+                select.innerHTML = `<option value="${stadiums[0]}" selected>${stadiums[0]}</option>`;
+                select.setAttribute('tabindex', '-1'); // Skip if auto-selected
+            } else {
+                select.innerHTML = '<option value="">Select Stadium</option>' + 
+                    stadiums.map((s, i) => `<option value="${s}">${i + 1}. ${s}</option>`).join('');
+                select.setAttribute('tabindex', '0');
+            }
+        }
+
+        function formatDateInput(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length > 2 && val.length <= 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2);
+            } else if (val.length > 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 6);
+            }
+            input.value = val;
+        }
+
+        function formatDateFromPicker(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear().toString().slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
+        let scheduleHandler = null;
+        function setupScheduleKeyBindings() {
+            const timeSelect = document.getElementById('schTime');
+            const stadiumSelect = document.getElementById('schStadium');
+            const teamAInput = document.getElementById('schTeamA');
+            const teamBInput = document.getElementById('schTeamB');
+            const dateInput = document.getElementById('schDate');
+            const saveBtn = document.getElementById('schSaveBtn');
+
+            let isProgrammaticFocus = false;
+
+            // Auto-open on focus with guard
+            timeSelect.onfocus = () => { 
+                if (!isProgrammaticFocus && timeSelect.showPicker) timeSelect.showPicker(); 
+            };
+            stadiumSelect.onfocus = () => { 
+                if (!isProgrammaticFocus && stadiumSelect.showPicker) stadiumSelect.showPicker(); 
+            };
+
+            const handleKeys = (e) => {
+                const view = document.getElementById('view-admin-schedule');
+                if (!view || !view.classList.contains('active')) return;
+                
+                if (e.key === 'Tab') {
+                    const isBack = e.shiftKey;
+                    const cur = document.activeElement;
+
+                    if (!isBack) {
+                        // FORWARD NAVIGATION (VALIDATE)
+                        if (cur === teamAInput) {
+                            const val = cur.value.trim().toUpperCase();
+                            if (val && !ABBR_TO_TEAM[val]) {
+                                alert('Invalid Team A entered');
+                                cur.value = '';
+                                e.preventDefault(); return;
+                            }
+                        } else if (cur === teamBInput) {
+                            const valB = cur.value.trim().toUpperCase();
+                            const valA = teamAInput.value.trim().toUpperCase();
+                            if (valB) {
+                                if (!ABBR_TO_TEAM[valB]) {
+                                    alert('Invalid Team B entered');
+                                    cur.value = '';
+                                    e.preventDefault(); return;
+                                } else if (valA === valB) {
+                                    alert('Teams A and B must be different!');
+                                    cur.value = '';
+                                    e.preventDefault(); return;
+                                }
+                            }
+                        } else if (cur === dateInput) {
+                            const val = cur.value.trim();
+                            if (val) {
+                                if (!/^\d{2}\/\d{2}\/\d{2}$/.test(val)) {
+                                    alert('Invalid Date Format! Use DD/MM/YY');
+                                    cur.value = '';
+                                    e.preventDefault(); return;
+                                }
+                                const p = val.split('/');
+                                const d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = 2000 + parseInt(p[2]);
+                                const t = new Date(y, m, d);
+                                if (t.getFullYear() !== y || t.getMonth() !== m || t.getDate() !== d) {
+                                    alert('Invalid Calendar Date!');
+                                    cur.value = '';
+                                    e.preventDefault(); return;
+                                }
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                if (t < today) {
+                                    alert('Past date entered! Please enter a current or future date.');
+                                    cur.value = '';
+                                    e.preventDefault(); return;
+                                }
+                            }
+                        } else if (cur === timeSelect) {
+                            if (!timeSelect.value) {
+                                alert('Please select a Time!');
+                                e.preventDefault(); return;
+                            }
+                            e.preventDefault();
+                            if (stadiumSelect.getAttribute('tabindex') === '-1') {
+                                saveBtn.focus();
+                            } else {
+                                stadiumSelect.focus();
+                            }
+                            return;
+                        } else if (cur === stadiumSelect) {
+                            if (!stadiumSelect.value || stadiumSelect.value.includes('Select')) {
+                                alert('Please select a Stadium!');
+                                e.preventDefault(); return;
+                            }
+                            e.preventDefault();
+                            saveBtn.focus();
+                            return;
+                        }
+                    } else {
+                        // BACKWARD NAVIGATION (SHIFT + TAB) - NO VALIDATION
+                        if (cur === teamBInput) { e.preventDefault(); teamAInput.focus(); }
+                        else if (cur === dateInput) { e.preventDefault(); teamBInput.focus(); }
+                        else if (cur === timeSelect) { e.preventDefault(); dateInput.focus(); }
+                        else if (cur === stadiumSelect) { e.preventDefault(); timeSelect.focus(); }
+                        else if (cur === saveBtn) {
+                            e.preventDefault();
+                            if (stadiumSelect.getAttribute('tabindex') === '-1') timeSelect.focus();
+                            else stadiumSelect.focus();
+                        }
+                    }
+                }
+
+                // Hotkey 1 / 2 logic
+                if (document.activeElement.tagName === 'INPUT') return;
+                if (e.key === '1' || e.key === '2') {
+                    const idx = parseInt(e.key) - 1;
+                    if (document.activeElement === timeSelect) {
+                        const optIdx = timeSelect.options[0].value === "" ? idx + 1 : idx;
+                        if (timeSelect.options[optIdx]) {
+                            timeSelect.selectedIndex = optIdx;
+                            e.preventDefault();
+                            isProgrammaticFocus = true;
+                            timeSelect.blur();
+                            timeSelect.focus();
+                            isProgrammaticFocus = false;
+                        }
+                    } else if (document.activeElement === stadiumSelect) {
+                        const optIdx = stadiumSelect.options[0].textContent.includes('Select') ? idx + 1 : idx;
+                        if (stadiumSelect.options[optIdx]) {
+                            stadiumSelect.selectedIndex = optIdx;
+                            e.preventDefault();
+                            isProgrammaticFocus = true;
+                            stadiumSelect.blur();
+                            stadiumSelect.focus();
+                            isProgrammaticFocus = false;
+                        }
+                    }
+                }
+            };
+
+            if (scheduleHandler) document.removeEventListener('keydown', scheduleHandler);
+            scheduleHandler = handleKeys;
+            document.addEventListener('keydown', scheduleHandler);
+        }
+
+        async function saveScheduleMatch() {
+            const teamAAbbr = document.getElementById('schTeamA').value.trim().toUpperCase();
+            const teamBAbbr = document.getElementById('schTeamB').value.trim().toUpperCase();
+            const dateStr = document.getElementById('schDate').value.trim();
+            const timeStr = document.getElementById('schTime').value.trim();
+            const stadium = document.getElementById('schStadium').value.trim();
+
+            if (!ABBR_TO_TEAM[teamAAbbr] || !ABBR_TO_TEAM[teamBAbbr]) {
+                alert('Invalid Team Shortcuts! Please use valid shortcuts (e.g. MI, CSK, RCB).');
+                return;
+            }
+            if (teamAAbbr === teamBAbbr) {
+                alert('Team A and Team B cannot be the same!');
+                return;
+            }
+            if (!/^\d{2}\/\d{2}\/\d{2}$/.test(dateStr)) {
+                alert('Please enter a valid Date in DD/MM/YY format (e.g. 24/03/24).');
+                return;
+            }
+
+            // Parse Date and Time to ISO
+            const dateParts = dateStr.split('/');
+            const day = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1;
+            const year = 2000 + parseInt(dateParts[2]);
+            
+            // Validate Date Logic (real date check)
+            const testDate = new Date(year, month, day);
+            if (testDate.getFullYear() !== year || testDate.getMonth() !== month || testDate.getDate() !== day) {
+                alert('The entered date is logically incorrect (invalid day/month combo)!');
+                return;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (testDate < today) {
+                alert('Past date entered! Please enter a current or future date.');
+                return;
+            }
+
+            if (!timeStr) {
+                alert('Please select a Time.');
+                return;
+            }
+            if (!stadium || stadium === 'Enter Team A First' || stadium === 'Select Stadium') {
+                alert('Please select a valid Stadium.');
+                return;
+            }
+
+            const teamA = ABBR_TO_TEAM[teamAAbbr];
+            const teamB = ABBR_TO_TEAM[teamBAbbr];
+            
+            const timeParts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            let hours = parseInt(timeParts[1]);
+            const mins = parseInt(timeParts[2]);
+            const ampm = timeParts[3].toUpperCase();
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+
+            const startTime = new Date(year, month, day, hours, mins);
+            
+            const toTzISO = (date) => {
+                const pad = n => n.toString().padStart(2, '0');
+                const y = date.getFullYear();
+                const mo = pad(date.getMonth() + 1);
+                const d = pad(date.getDate());
+                const h = pad(date.getHours());
+                const mi = pad(date.getMinutes());
+                const s = pad(date.getSeconds());
+                return `${y}-${mo}-${d}T${h}:${mi}:${s}+05:30`;
+            };
+
+            const startTimeISO = toTzISO(startTime);
+            const customDateLabel = startTime.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + " '" + startTime.getFullYear().toString().slice(-2);
+            const matchId = `${startTimeISO}-${teamA.replace(/\s+/g, '_')}-vs-${teamB.replace(/\s+/g, '_')}`;
+
+            const newMatch = {
+                id: matchId,
+                teamA,
+                teamB,
+                venue: stadium,
+                startTimeISO,
+                dateLabel: customDateLabel,
+                winner: null
+            };
+
+            try {
+                const res = await fetch(SCHEDULE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const data = await res.json();
+                let matches = data.record.matches || [];
+
+                if (matches.some(m => m.id === matchId)) {
+                    alert('A match with this ID already exists!');
+                    return;
+                }
+
+                matches.push(newMatch);
+                // Sort by date and time
+                matches.sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+
+                const updateRes = await fetch(SCHEDULE_BIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ matches: matches })
+                });
+
+                if (updateRes.ok) {
+                    alert('Match added successfully to schedule!');
+                    scheduleData = matches;
+                    renderUpcomingMatches();
+                    switchView('admin'); // Go to Set Winner page
+                } else {
+                    alert('Failed to save match to schedule.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            }
         }
 
         // ─── START ──────────────────────────
