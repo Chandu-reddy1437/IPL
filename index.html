@@ -585,7 +585,8 @@
                                     <input type="text" id="schDate" placeholder="DD/MM/YY" maxlength="8"
                                         class="w-full bg-brand-darker border border-brand-overlay text-brand-primary rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none font-bold transition-all"
                                         oninput="formatDateInput(this)">
-                                    <input type="date" id="schDatePicker" tabindex="-1" class="absolute inset-0 opacity-0 cursor-pointer" oninput="schDate.value=formatDateFromPicker(this.value)">
+                                    <input type="date" id="schDatePicker" tabindex="-1" class="absolute inset-0 opacity-0 cursor-pointer" 
+                                        oninput="document.getElementById('schDate').value=formatDateFromPicker(this.value); if(validateDate()) document.getElementById('schTime').focus();">
                                 </div>
                             </div>
                             <!-- Time -->
@@ -2389,6 +2390,93 @@
         }
 
         let scheduleHandler = null;
+        let isProgrammaticFocus = false;
+        let isSkippingValidation = false;
+
+        // SHARED VALIDATION FUNCTIONS (Accessible for mobile/picker auto-advance)
+        const validateTeamA = () => {
+            const teamAInput = document.getElementById('schTeamA');
+            if (isSkippingValidation) return true;
+            const val = teamAInput.value.trim().toUpperCase();
+            if (val && !ABBR_TO_TEAM[val]) {
+                alert('Invalid Team A entered');
+                teamAInput.value = '';
+                setTimeout(() => teamAInput.focus(), 10);
+                return false;
+            }
+            return true;
+        };
+        const validateTeamB = () => {
+            const teamAInput = document.getElementById('schTeamA');
+            const teamBInput = document.getElementById('schTeamB');
+            if (isSkippingValidation) return true;
+            const valB = teamBInput.value.trim().toUpperCase();
+            const valA = teamAInput.value.trim().toUpperCase();
+            if (valB) {
+                if (!ABBR_TO_TEAM[valB]) {
+                    alert('Invalid Team B entered');
+                    teamBInput.value = '';
+                    setTimeout(() => teamBInput.focus(), 10);
+                    return false;
+                } else if (valA === valB) {
+                    alert('Teams A and B must be different!');
+                    teamBInput.value = '';
+                    setTimeout(() => teamBInput.focus(), 10);
+                    return false;
+                }
+            }
+            return true;
+        };
+        const validateDate = () => {
+            const dateInput = document.getElementById('schDate');
+            if (isSkippingValidation) return true;
+            const val = dateInput.value.trim();
+            if (!val) return true;
+            if (!/^\d{2}\/\d{2}\/\d{2}$/.test(val)) {
+                alert('Invalid Date Format! Use DD/MM/YY');
+                dateInput.value = '';
+                setTimeout(() => dateInput.focus(), 10);
+                return false;
+            }
+            const p = val.split('/');
+            const d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = 2000 + parseInt(p[2]);
+            const t = new Date(y, m, d);
+            if (t.getFullYear() !== y || t.getMonth() !== m || t.getDate() !== d) {
+                alert('Invalid Calendar Date!');
+                dateInput.value = '';
+                setTimeout(() => dateInput.focus(), 10);
+                return false;
+            }
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            if (t < today) {
+                alert('Past date entered! Please enter a current or future date.');
+                dateInput.value = '';
+                setTimeout(() => dateInput.focus(), 10);
+                return false;
+            }
+            return true;
+        };
+        const validateTime = () => {
+            const timeSelect = document.getElementById('schTime');
+            if (isSkippingValidation) return true;
+            if (!timeSelect.value) {
+                alert('Please select a Time!');
+                setTimeout(() => timeSelect.focus(), 10);
+                return false;
+            }
+            return true;
+        };
+        const validateStadium = () => {
+            const stadiumSelect = document.getElementById('schStadium');
+            if (isSkippingValidation) return true;
+            if (!stadiumSelect.value || stadiumSelect.value.includes('Select')) {
+                alert('Please select a Stadium!');
+                setTimeout(() => stadiumSelect.focus(), 10);
+                return false;
+            }
+            return true;
+        };
+
         function setupScheduleKeyBindings() {
             const timeSelect = document.getElementById('schTime');
             const stadiumSelect = document.getElementById('schStadium');
@@ -2397,94 +2485,12 @@
             const dateInput = document.getElementById('schDate');
             const saveBtn = document.getElementById('schSaveBtn');
 
-            let isProgrammaticFocus = false;
-
             // Auto-open on focus with guard
             timeSelect.onfocus = () => { 
                 if (!isProgrammaticFocus && timeSelect.showPicker) timeSelect.showPicker(); 
             };
             stadiumSelect.onfocus = () => { 
                 if (!isProgrammaticFocus && stadiumSelect.showPicker) stadiumSelect.showPicker(); 
-            };
-
-            let isSkippingValidation = false;
-
-            // SHARED VALIDATION FUNCTIONS
-            const validateTeamA = () => {
-                if (isSkippingValidation) return true;
-                const val = teamAInput.value.trim().toUpperCase();
-                if (val && !ABBR_TO_TEAM[val]) {
-                    alert('Invalid Team A entered');
-                    teamAInput.value = '';
-                    setTimeout(() => teamAInput.focus(), 10);
-                    return false;
-                }
-                return true;
-            };
-            const validateTeamB = () => {
-                if (isSkippingValidation) return true;
-                const valB = teamBInput.value.trim().toUpperCase();
-                const valA = teamAInput.value.trim().toUpperCase();
-                if (valB) {
-                    if (!ABBR_TO_TEAM[valB]) {
-                        alert('Invalid Team B entered');
-                        teamBInput.value = '';
-                        setTimeout(() => teamBInput.focus(), 10);
-                        return false;
-                    } else if (valA === valB) {
-                        alert('Teams A and B must be different!');
-                        teamBInput.value = '';
-                        setTimeout(() => teamBInput.focus(), 10);
-                        return false;
-                    }
-                }
-                return true;
-            };
-            const validateDate = () => {
-                if (isSkippingValidation) return true;
-                const val = dateInput.value.trim();
-                if (!val) return true;
-                if (!/^\d{2}\/\d{2}\/\d{2}$/.test(val)) {
-                    alert('Invalid Date Format! Use DD/MM/YY');
-                    dateInput.value = '';
-                    setTimeout(() => dateInput.focus(), 10);
-                    return false;
-                }
-                const p = val.split('/');
-                const d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = 2000 + parseInt(p[2]);
-                const t = new Date(y, m, d);
-                if (t.getFullYear() !== y || t.getMonth() !== m || t.getDate() !== d) {
-                    alert('Invalid Calendar Date!');
-                    dateInput.value = '';
-                    setTimeout(() => dateInput.focus(), 10);
-                    return false;
-                }
-                const today = new Date(); today.setHours(0, 0, 0, 0);
-                if (t < today) {
-                    alert('Past date entered! Please enter a current or future date.');
-                    dateInput.value = '';
-                    setTimeout(() => dateInput.focus(), 10);
-                    return false;
-                }
-                return true;
-            };
-            const validateTime = () => {
-                if (isSkippingValidation) return true;
-                if (!timeSelect.value) {
-                    alert('Please select a Time!');
-                    setTimeout(() => timeSelect.focus(), 10);
-                    return false;
-                }
-                return true;
-            };
-            const validateStadium = () => {
-                if (isSkippingValidation) return true;
-                if (!stadiumSelect.value || stadiumSelect.value.includes('Select')) {
-                    alert('Please select a Stadium!');
-                    setTimeout(() => stadiumSelect.focus(), 10);
-                    return false;
-                }
-                return true;
             };
 
             // ATTACH BLUR HANDLERS FOR MOBILE (and click-away)
