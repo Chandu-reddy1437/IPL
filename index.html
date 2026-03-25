@@ -249,6 +249,9 @@
             color: var(--text-secondary);
         }
 
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .themed-chip {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
@@ -402,7 +405,7 @@
         </div>
 
         <!-- LEADERBOARD VIEW -->
-        <div id="view-leaderboard" class="view-section">
+        <div id="view-leaderboard" class="view-section pt-16 pb-32 max-w-7xl mx-auto px-4 lg:px-8">
             <section class="px-5 pt-6 pb-4 flex justify-between items-end">
                 <div>
                     <h2 class="text-2xl font-bold mb-1">Leaderboard</h2>
@@ -502,8 +505,10 @@
                         <!-- 2. Main Graph Area (Right) -->
                         <div class="flex-1 min-w-0 order-2 flex flex-col gap-6">
                             <!-- Chart Container -->
-                            <div class="bg-brand-darker/20 border border-brand-overlay/50 rounded-2xl p-2 h-[350px] lg:h-[480px] relative shadow-inner">
-                                <canvas id="leaderboardChart"></canvas>
+                            <div class="bg-brand-darker/20 border border-brand-overlay/50 rounded-2xl p-2 relative shadow-inner overflow-x-auto no-scrollbar">
+                                <div id="chartScrollWrapper" class="h-[350px] lg:h-[400px]">
+                                    <canvas id="leaderboardChart"></canvas>
+                                </div>
                             </div>
 
                             <!-- Selected Comparison (Bottom) -->
@@ -1498,6 +1503,16 @@
                 const abbrB = TEAM_ABBR[m.teamB?.trim()] || m.teamB;
                 return `M${item.sequenceIdx}: ${abbrA} Vs ${abbrB}`;
             });
+
+            const scrollWrapper = document.getElementById('chartScrollWrapper');
+            if (scrollWrapper) {
+                // Increased spacing for even better readability on touch devices
+                const minWidthPerMatch = window.innerWidth < 1024 ? 85 : 100;
+                const parentWidth = scrollWrapper.parentElement.clientWidth;
+                const calculatedWidth = displayMatches.length * minWidthPerMatch;
+                scrollWrapper.style.width = Math.max(parentWidth, calculatedWidth) + 'px';
+            }
+
             const players = [...new Set(allPicks.map(p => p.userName))].filter(u => u !== 'ADMIN');
 
             // Build datasets for each player
@@ -1585,7 +1600,7 @@
                         x: {
                             ticks: { 
                                 color: '#94a3b8',
-                                font: { size: 8, weight: '500' },
+                                font: { size: 9, weight: '500' },
                                 maxRotation: 45,
                                 minRotation: 45,
                                 autoSkip: true
