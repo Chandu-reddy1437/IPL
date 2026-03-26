@@ -636,17 +636,17 @@
         </div>
 
         <div id="view-nice-leaderboard" class="view-section pt-16 pb-32 max-w-7xl mx-auto px-4 lg:px-8">
-            <section class="px-5 pt-6 pb-4 flex justify-between items-end gap-3">
+            <section class="px-5 pt-6 pb-4 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
                 <div class="flex-shrink-0">
                     <h2 class="text-2xl font-bold mb-0.5 leading-none">Nice Leaderboard</h2>
                     <p class="text-brand-text text-[11px] lg:text-sm">Rankings for the Nice Group only.</p>
                 </div>
-                <div class="flex items-center gap-2 lg:gap-3 pb-0.5">
+                <div class="flex flex-col items-start lg:flex-row lg:items-center gap-2 lg:gap-3 lg:pb-0.5">
                     <button onclick="switchView('nice-results')" 
                         class="text-[9px] lg:text-[10px] whitespace-nowrap font-black text-brand-primary uppercase tracking-widest flex items-center gap-1 bg-brand-primary/10 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg border border-brand-primary/20 hover:bg-brand-primary/20 transition-all active:scale-95">
                         <span class="material-symbols-outlined text-[14px] lg:text-sm leading-none">fact_check</span> Results
                     </button>
-                    <div class="text-[9px] lg:text-xs text-brand-text font-bold uppercase text-right leading-tight" id="niceLeaderboardMatchesCount">
+                    <div class="text-[9px] lg:text-xs text-brand-text font-bold uppercase text-left lg:text-right leading-tight" id="niceLeaderboardMatchesCount">
                         Completed<br>Matches: 0</div>
                 </div>
             </section>
@@ -768,17 +768,17 @@
         <!-- NICE RESULTS VIEW -->
         <div id="view-nice-results" class="view-section pt-16 pb-32 max-w-7xl mx-auto px-4 lg:px-8">
             <section class="px-5 pt-6 pb-4">
-                <div class="flex justify-between items-end gap-3 mb-4">
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 mb-4">
                     <div class="flex-shrink-0">
                         <h2 class="text-2xl font-bold leading-none">Nice Results</h2>
                         <p class="text-brand-text text-[11px] lg:text-sm">Your group performance.</p>
                     </div>
-                    <div class="flex items-center gap-2 lg:gap-3 pb-0.5">
+                    <div class="flex flex-col items-start lg:flex-row lg:items-center gap-2 lg:gap-3 lg:pb-0.5">
                         <button onclick="switchView('nice-leaderboard')" 
                             class="text-[9px] lg:text-[10px] whitespace-nowrap font-black text-green-400 uppercase tracking-widest flex items-center gap-1 bg-green-400/10 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg border border-green-400/20 hover:bg-green-400/20 transition-all active:scale-95">
                             <span class="material-symbols-outlined text-[14px] lg:text-sm leading-none">leaderboard</span> Leaderboard
                         </button>
-                        <div class="text-[9px] lg:text-xs text-brand-text font-bold uppercase text-right leading-tight" id="nicePerformanceMatchesCount">
+                        <div class="text-[9px] lg:text-xs text-brand-text font-bold uppercase text-left lg:text-right leading-tight" id="nicePerformanceMatchesCount">
                             Completed<br>Matches: 0</div>
                     </div>
                 </div>
