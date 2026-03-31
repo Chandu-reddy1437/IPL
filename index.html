@@ -1244,6 +1244,30 @@
         </div>
     </div>
 
+    <!-- ═══════════════ NOT PREDICTED MODAL ═══════════════ -->
+    <div class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center px-4" id="notPredictedModal"
+        onclick="if(event.target===this||event.target.classList.contains('bg-brand-darker/90')) closeNotPredictedModal()">
+        <div class="fixed inset-0 bg-brand-darker/90 backdrop-blur-md" onclick="closeNotPredictedModal()"></div>
+        <div
+            class="modal-inner relative bg-brand-muted border border-brand-overlay rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="p-5 border-b border-brand-overlay shrink-0">
+                <h3 id="notPredictedModalCount" class="text-sm font-bold text-center text-brand-text uppercase tracking-wider mb-2">Not yet Predicted</h3>
+                <div id="notPredictedModalTitle" class="text-lg font-black text-center text-brand-primary"></div>
+            </div>
+            <div id="notPredictedModalScrollBody" class="p-0 overflow-y-auto no-scrollbar pb-2 flex-1 relative bg-brand-surface/30">
+                <div id="notPredictedList" class="p-5 space-y-2">
+                    <!-- List of names -->
+                </div>
+            </div>
+            <div class="p-4 border-t border-brand-overlay shrink-0 z-20 bg-brand-muted">
+                <button
+                    class="w-full bg-brand-accent hover:bg-orange-600 text-brand-darker font-bold py-3 rounded-xl transition-all text-sm"
+                    onclick="closeNotPredictedModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
     <script>
         // ─── GLOBALS ──────────────────────────
@@ -2328,6 +2352,48 @@
             document.getElementById('predictionModal').classList.remove('active');
         }
 
+        function showNotPredictedModal(matchId) {
+            const match = scheduleData.find(m => m.id === matchId);
+            if (!match) return;
+
+            const teamAAbbr = TEAM_ABBR[match.teamA] || match.teamA;
+            const teamBAbbr = TEAM_ABBR[match.teamB] || match.teamB;
+            document.getElementById('notPredictedModalTitle').textContent = `${teamAAbbr} Vs ${teamBAbbr}`;
+
+            // Get ALL registered users EXCEPT ADMIN
+            const allUsers = Object.keys(globalUsers).filter(u => u !== 'ADMIN');
+            
+            // Find those who HAVE predicted for this match
+            const matchPicks = globalAllPicks.filter(p => p.matchId === matchId);
+            const predictedUsers = new Set(matchPicks.map(p => p.userName));
+            
+            const notPredicted = allUsers.filter(u => !predictedUsers.has(u));
+            const count = notPredicted.length;
+            document.getElementById('notPredictedModalCount').textContent = `Not yet Predicted (${count})`;
+
+            const listContainer = document.getElementById('notPredictedList');
+            if (notPredicted.length === 0) {
+                listContainer.innerHTML = '<p class="text-center text-brand-text py-4">Everyone has predicted! 👏</p>';
+            } else {
+                listContainer.innerHTML = notPredicted.sort().map(u => {
+                    const displayName = globalUsers[u]?.name || u;
+                    return `<div class="bg-brand-darker/50 p-3 rounded-xl border border-brand-overlay flex justify-between items-center">
+                        <span class="font-bold text-brand-primary">${displayName}</span>
+                        <span class="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-bold">PENDING</span>
+                    </div>`;
+                }).join('');
+            }
+
+            document.getElementById('notPredictedModal').classList.add('active');
+            document.getElementById('notPredictedModalScrollBody').scrollTop = 0;
+        }
+
+
+        function closeNotPredictedModal() {
+            document.getElementById('notPredictedModal').classList.remove('active');
+        }
+
+
         // ─── RENDER UPCOMING MATCHES ──────────────────────────
         function renderUpcomingMatches() {
             const container = document.getElementById('upcomingMatchesContainer');
@@ -2393,8 +2459,9 @@
                         <span class="text-[11px] font-black italic opacity-20 tracking-[0.2em] text-brand-text">VS</span>
                         <div class="flex flex-col items-center mt-2 bg-brand-darker/60 px-4 py-2 rounded-2xl border border-brand-overlay/60 shadow-inner min-w-[100px]">
                             <span class="text-[8px] text-brand-text font-black uppercase tracking-[0.2em] mb-1 opacity-60">Cutoff In</span>
-                            <div class="countdown text-xl text-brand-accent font-black tracking-tighter font-mono leading-none" data-time="${m.startTimeISO}">...</div>
+                            <div class="countdown text-base text-brand-accent font-black tracking-tighter font-mono leading-none" data-time="${m.startTimeISO}">...</div>
                         </div>
+                        <button class="mt-2 text-xs font-bold text-brand-text hover:text-brand-accent transition-colors underline decoration-dotted underline-offset-4" onclick="showNotPredictedModal('${m.id}')">Not yet Predicted</button>
                     </div>
                     <div class="flex flex-col items-center gap-1.5 w-1/3 group has-stats cursor-pointer" onclick="showH2HModal('${m.teamA}', '${m.teamB}')">
                         <div class="relative">
