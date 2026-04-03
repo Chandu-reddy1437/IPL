@@ -806,7 +806,6 @@
             </div>
         </div>
 
-        <!-- NICE RESULTS VIEW -->
         <div id="view-nice-results" class="view-section pt-16 pb-32 max-w-7xl mx-auto px-4 lg:px-8">
             <section class="px-5 pt-6 pb-4">
                 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 mb-4">
@@ -884,8 +883,14 @@
             <section class="px-5 pt-6 pb-4">
                 <div class="flex justify-between items-center mb-1">
                     <h2 class="text-2xl font-bold">Set Winner</h2>
-                    <button onclick="logoutAdmin()"
-                        class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
+                    <div class="flex items-center gap-2">
+                        <button id="archiveBtn" onclick="archiveHistoricalPicks()" class="bg-brand-muted hover:bg-brand-overlay border border-brand-overlay text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                            <span class="material-symbols-outlined text-sm">archive</span>
+                            Archive History
+                        </button>
+                        <button onclick="logoutAdmin()"
+                            class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
+                    </div>
                 </div>
                 <p class="text-brand-text text-sm mb-6">Update match winner details.</p>
 
@@ -1328,6 +1333,7 @@
 
         const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
         const SCHEDULE_BIN_URL = 'https://api.jsonbin.io/v3/b/69b89f95aa77b81da9eefef2';
+        const ARCHIVE_BIN_URL = 'https://api.jsonbin.io/v3/b/69cfb0ec36566621a876c870';
         const MASTER_KEY = '$2a$10$aYtY9fT6R2RECjwsJcmDKeEUlKPfuC8NgeDISmj/j8ruTZLHyoOHO';
 
         function getNormalizedData(record) {
@@ -1456,22 +1462,33 @@
 
         async function fetchMyPicks() {
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                const { picks, users } = getNormalizedData(data.record);
+                // Fetch from both Main and Archive bins
+                const [resMain, resArchive] = await Promise.all([
+                    fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }),
+                    fetch(ARCHIVE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } })
+                ]);
 
-                globalAllPicks = picks;
-                globalUsers = users;
-                globalAllPlayers = new Set(picks.map(p => p.userName));
+                const dataMain = await resMain.json();
+                const dataArchive = await resArchive.json();
+
+                const { picks: picksMain, users } = getNormalizedData(dataMain.record);
+                const { picks: picksArchive } = getNormalizedData(dataArchive.record || {});
+
+                // Combine picks - the UI uses globalAllPicks for leaderboard and my history
+                const combinedPicks = [...picksArchive, ...picksMain];
+
+                globalAllPicks = combinedPicks;
+                globalUsers = users; // Users are strictly in Main Bin for easier login management
+                globalAllPlayers = new Set(combinedPicks.map(p => p.userName));
 
                 if (currentUser) {
                     const normalizedCurrent = currentUser.toUpperCase();
-                    myPicks = picks.filter(p => p.userName === normalizedCurrent);
+                    myPicks = combinedPicks.filter(p => p.userName === normalizedCurrent);
                     document.getElementById('userChip').textContent = normalizedCurrent;
                     updateNiceNavVisibility();
                 }
                 precalculateStats();
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error('Error fetching picks:', err); }
         }
 
         function updateNiceNavVisibility() {
@@ -2410,7 +2427,8 @@
                 return;
             }
 
-            filtered.forEach(m => {
+            // Show only next 10 matches
+            filtered.slice(0, 10).forEach(m => {
                 const matchTime = new Date(m.startTimeISO).getTime();
                 const isLocked = now >= matchTime - 30 * 60 * 1000;
                 const existingPick = myPicks.find(p => p.matchId === m.id);
@@ -2547,7 +2565,9 @@
                     });
 
                     if (!saveRes.ok) {
-                        alert('Failed to submit pick.');
+                        const errBody = await saveRes.text();
+                        console.error(`Failed to submit pick. Status: ${saveRes.status}, Body: ${errBody}`);
+                        alert(`Failed to submit pick: ${saveRes.status} ${errBody}`);
                         return;
                     }
 
@@ -2872,6 +2892,72 @@
             }).join('');
         }
 
+        async function archiveHistoricalPicks() {
+            if (!confirm('This will move all historical picks (for completed and rewarded matches) from the main bin to the archive bin. This helps keep the main bin small. Proceed?')) return;
+            
+            const btn = document.getElementById('archiveBtn');
+            const originalText = btn.textContent;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Archiving...';
+            btn.disabled = true;
+
+            try {
+                // 1. Fetch latest Main data
+                const mainRes = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const mainData = await mainRes.json();
+                let { picks: allMainPicks, users } = getNormalizedData(mainData.record);
+
+                // 2. Identify picks for matches that are already rewarded (have points)
+                const picksToArchive = allMainPicks.filter(p => p.points !== undefined);
+                const remainingMainPicks = allMainPicks.filter(p => p.points === undefined);
+
+                if (picksToArchive.length === 0) {
+                    alert('No picks found in the main bin that are ready for archiving (only rewarded picks can be archived).');
+                    return;
+                }
+
+                // 3. Fetch current Archive data
+                const archiveRes = await fetch(ARCHIVE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const archiveData = await archiveRes.json();
+                let { picks: archivePicks } = getNormalizedData(archiveData.record || {});
+
+                // 4. Update Archive Bin
+                const newArchivePicks = [...archivePicks, ...picksToArchive];
+                const saveArchive = await fetch(ARCHIVE_BIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ picks: newArchivePicks })
+                });
+
+                if (!saveArchive.ok) {
+                    const err = await saveArchive.text();
+                    alert(`Failed to update archive bin: ${saveArchive.status} ${err}`);
+                    return;
+                }
+
+                // 5. Update Main Bin
+                const saveMain = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ picks: remainingMainPicks, users: users })
+                });
+
+                if (saveMain.ok) {
+                    globalAllPicks = [...newArchivePicks, ...remainingMainPicks];
+                    renderAdminView();
+                    alert(`Archived ${picksToArchive.length} picks successfully! Main bin size reduced.`);
+                } else {
+                    const err = await saveMain.text();
+                    alert(`Failed to update main bin: ${saveMain.status} ${err}. Archive was updated, data might be duplicated temporarily.`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error during archiving process: ' + err.message);
+            } finally {
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">archive</span> Archive History';
+                btn.disabled = false;
+            }
+        }
+
         async function saveWinner(matchIdx) {
             const select = document.getElementById(`winner-select-${matchIdx}`);
             const winner = select.value;
@@ -2978,22 +3064,45 @@
                     }
                 });
 
-                const savePicks = await fetch(JSONBIN_URL, {
+                // 1. Fetch current archive
+                const archiveRes = await fetch(ARCHIVE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const archiveDataBin = await archiveRes.json();
+                let { picks: archivePicks } = getNormalizedData(archiveDataBin.record || {});
+
+                // 2. Identify picks to archive (those for this match)
+                const picksToArchive = allPicks.filter(p => p.matchId === matchId);
+                const remainingMainPicks = allPicks.filter(p => p.matchId !== matchId);
+
+                // 3. Update Archive Bin
+                const newArchivePicks = [...archivePicks, ...picksToArchive];
+                const saveArchive = await fetch(ARCHIVE_BIN_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: allPicks, users: users })
+                    body: JSON.stringify({ picks: newArchivePicks })
                 });
 
-                if (savePicks.ok) {
-                    globalAllPicks = allPicks;
+                if (!saveArchive.ok) {
+                    alert('Failed to update archive. Rewards not saved to main bin.');
+                    return;
+                }
+
+                // 4. Update Main Bin (Remove archived picks)
+                const saveMain = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify({ picks: remainingMainPicks, users: users })
+                });
+
+                if (saveMain.ok) {
+                    globalAllPicks = [...newArchivePicks, ...remainingMainPicks];
                     renderAdminView();
-                    alert(`Rewards distributed! Pool: ${totalPool}, Correct: ${correctPicks.length}, Points/Winner: ${pointsPerWinner.toFixed(2)}`);
+                    alert(`Rewards distributed & picks archived! Pool: ${totalPool}, Correct: ${correctPicks.length}, Points/Winner: ${pointsPerWinner.toFixed(2)}`);
                 } else {
-                    alert('Failed to distribute rewards.');
+                    alert('Failed to update main bin after archiving. Data might be inconsistent!');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error rewarding winners.');
+                alert('Error rewarding winners and archiving.');
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
