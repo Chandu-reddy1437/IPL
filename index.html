@@ -690,7 +690,8 @@
                                     <th>Rank</th>
                                     <th>Player</th>
                                     <th class="text-center sortable" onclick="sortLeaderboard('points', true)">Points
-                                        <span id="nice-sort-points" class="text-[8px] ml-1">▼</span></th>
+                                        <span id="nice-sort-points" class="text-[8px] ml-1">▼</span>
+                                    </th>
                                     <th class="text-center sortable" onclick="sortLeaderboard('correct', true)">Wins
                                         <span id="nice-sort-correct" class="text-[8px] ml-1 hidden"></span>
                                     </th>
@@ -884,7 +885,8 @@
                 <div class="flex justify-between items-center mb-1">
                     <h2 class="text-2xl font-bold">Set Winner</h2>
                     <div class="flex items-center gap-2">
-                        <button id="archiveBtn" onclick="archiveHistoricalPicks()" class="bg-brand-muted hover:bg-brand-overlay border border-brand-overlay text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                        <button id="archiveBtn" onclick="archiveHistoricalPicks()"
+                            class="bg-brand-muted hover:bg-brand-overlay border border-brand-overlay text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
                             <span class="material-symbols-outlined text-sm">archive</span>
                             Archive History
                         </button>
@@ -1256,10 +1258,13 @@
         <div
             class="modal-inner relative bg-brand-muted border border-brand-overlay rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-brand-overlay shrink-0">
-                <h3 id="notPredictedModalCount" class="text-sm font-bold text-center text-brand-text uppercase tracking-wider mb-2">Not yet Predicted</h3>
+                <h3 id="notPredictedModalCount"
+                    class="text-sm font-bold text-center text-brand-text uppercase tracking-wider mb-2">Not yet
+                    Predicted</h3>
                 <div id="notPredictedModalTitle" class="text-lg font-black text-center text-brand-primary"></div>
             </div>
-            <div id="notPredictedModalScrollBody" class="p-0 overflow-y-auto no-scrollbar pb-2 flex-1 relative bg-brand-surface/30">
+            <div id="notPredictedModalScrollBody"
+                class="p-0 overflow-y-auto no-scrollbar pb-2 flex-1 relative bg-brand-surface/30">
                 <div id="notPredictedList" class="p-5 space-y-2">
                     <!-- List of names -->
                 </div>
@@ -1277,7 +1282,7 @@
     <script>
         // ─── GLOBALS ──────────────────────────
         let currentUser = localStorage.getItem('ipl_username') || null;
-        const NICE_USERS = ['GOPI', 'CHANDU', 'DP', 'RAJU', 'SRINI', 'DHANRAJ', 'ABHIJIT', 'SHRAVAN', 'TEJA', 'KISHORE', 'SANTU', 'NEELIMA', 'GOLLA'];
+        const NICE_USERS = ['GOPI', 'CHANDU', 'DP', 'SRINI', 'DHANRAJ', 'ABHIJIT', 'SHRAVAN', 'TEJA', 'KISHORE', 'SANTU', 'NEELIMA', 'GOLLA', 'MAMATHA', 'NANDA'];
         const NICE_USERS_SET = new Set(NICE_USERS);
 
         let memoizedStats = {
@@ -1440,6 +1445,7 @@
             }
 
             await Promise.all([fetchSchedule(), fetchMyPicks(), fetchH2H()]);
+            precalculateStats(); // Final sync
             renderUpcomingMatches();
             setupFilters();
             setInterval(updateCountdowns, 1000);
@@ -1797,7 +1803,7 @@
 
                         if (isNice) {
                             const matchStat = memoizedStats.niceMatchPointsMap[p.matchId];
-                            if (matchStat) {
+                            if (matchStat && matchStat.ptsPerWinner > 0) {
                                 if (p.team === winner) userStats[p.userName].points += (matchStat.ptsPerWinner - 100);
                                 else userStats[p.userName].points -= 100;
                             }
@@ -1813,7 +1819,8 @@
                         memoizedStats.decisiveMatches.forEach(m => {
                             const mIdx = scheduleData.findIndex(sm => sm.id === m.id);
                             if (mIdx >= firstIdx) {
-                                if (!globalAllPicks.find(p => p.matchId === m.id && p.userName === u)) {
+                                const mStat = memoizedStats.niceMatchPointsMap[m.id];
+                                if (mStat && mStat.ptsPerWinner > 0 && !globalAllPicks.find(p => p.matchId === m.id && p.userName === u)) {
                                     userStats[u].points -= 100;
                                 }
                             }
@@ -2382,11 +2389,11 @@
 
             // Get ALL registered users EXCEPT ADMIN
             const allUsers = Object.keys(globalUsers).filter(u => u !== 'ADMIN');
-            
+
             // Find those who HAVE predicted for this match
             const matchPicks = globalAllPicks.filter(p => p.matchId === matchId);
             const predictedUsers = new Set(matchPicks.map(p => p.userName));
-            
+
             const notPredicted = allUsers.filter(u => !predictedUsers.has(u));
             const count = notPredicted.length;
             document.getElementById('notPredictedModalCount').textContent = `Not yet Predicted (${count})`;
@@ -2746,6 +2753,12 @@
                             if (matchStat) {
                                 eligibleCount = matchStat.eligibleInGroup.length;
                                 winningCount = globalAllPicks.filter(p => p.matchId === m.id && NICE_USERS_SET.has(p.userName.toUpperCase()) && p.team === m.winner).length;
+                            } else {
+                                // Dynamic recalculation if matchStat is missing (e.g. race condition)
+                                const curIdx = scheduleData.findIndex(sm => sm.id === m.id);
+                                const nicePlayers = Array.from(new Set(globalAllPicks.map(p => p.userName))).filter(u => u !== 'ADMIN' && NICE_USERS_SET.has(u.toUpperCase()));
+                                eligibleCount = nicePlayers.filter(u => memoizedStats.userFirstMatchIdxMap[u] <= curIdx).length;
+                                winningCount = globalAllPicks.filter(p => p.matchId === m.id && NICE_USERS_SET.has(p.userName.toUpperCase()) && p.team === m.winner).length;
                             }
                         } else {
                             const currentMatchIdx = scheduleData.findIndex(sm => sm.id === m.id);
@@ -2766,8 +2779,22 @@
                 let pts = myPick && myPick.points !== undefined ? Number(myPick.points.toFixed(2)) : 0;
 
                 if (isNice && m.winner !== null && m.winner !== 'No Result') {
-                    const matchStat = memoizedStats.niceMatchPointsMap[m.id];
-                    if (matchStat) {
+                    let matchStat = memoizedStats.niceMatchPointsMap[m.id];
+
+                    // Recalculate matchStat on the fly for display if missing
+                    if (!matchStat) {
+                        const curIdx = scheduleData.findIndex(sm => sm.id === m.id);
+                        const nicePlayers = Array.from(new Set(globalAllPicks.map(p => p.userName))).filter(u => u !== 'ADMIN' && NICE_USERS_SET.has(u.toUpperCase()));
+                        const eligible = nicePlayers.filter(u => memoizedStats.userFirstMatchIdxMap[u] <= curIdx);
+                        const groupWinners = globalAllPicks.filter(gp => gp.matchId === m.id && NICE_USERS_SET.has(gp.userName.toUpperCase()) && gp.team === m.winner).length;
+                        const pool = eligible.length * 100;
+                        matchStat = {
+                            ptsPerWinner: groupWinners > 0 ? (pool / groupWinners) : 0,
+                            eligibleInGroup: eligible
+                        };
+                    }
+
+                    if (matchStat && matchStat.ptsPerWinner > 0) {
                         if (myPick) {
                             if (myPick.team === m.winner) pts = matchStat.ptsPerWinner - 100;
                             else pts = -100;
@@ -2776,6 +2803,8 @@
                         } else {
                             pts = 0;
                         }
+                    } else {
+                        pts = 0;
                     }
                 }
 
@@ -2825,7 +2854,7 @@
             if (isNice) {
                 pastMatches.forEach(m => {
                     const matchStat = memoizedStats.niceMatchPointsMap[m.id];
-                    if (matchStat) {
+                    if (matchStat && matchStat.ptsPerWinner > 0) {
                         const myPick = globalAllPicks.find(p => p.matchId === m.id && p.userName === currentUser);
                         if (myPick) {
                             totalPoints += (myPick.team === m.winner ? matchStat.ptsPerWinner - 100 : -100);
@@ -2897,7 +2926,7 @@
 
         async function archiveHistoricalPicks() {
             if (!confirm('This will move all historical picks (for completed and rewarded matches) from the main bin to the archive bin. This helps keep the main bin small. Proceed?')) return;
-            
+
             const btn = document.getElementById('archiveBtn');
             const originalText = btn.textContent;
             btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Archiving...';
@@ -3019,9 +3048,16 @@
             btn.disabled = true;
 
             try {
-                const resPicks = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const picksDataBin = await resPicks.json();
-                const { picks: allPicks, users } = getNormalizedData(picksDataBin.record);
+                // Fetch both bins
+                const [resMain, resArchive] = await Promise.all([
+                    fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }),
+                    fetch(ARCHIVE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } })
+                ]);
+                const dataMain = await resMain.json();
+                const dataArchive = await resArchive.json();
+
+                const { picks: picksMain, users } = getNormalizedData(dataMain.record);
+                const { picks: picksArchive } = getNormalizedData(dataArchive.record || {});
 
                 const matchId = match.id;
                 const winner = match.winner;
@@ -3029,6 +3065,13 @@
                 const userList = Object.keys(users).filter(u => u !== 'ADMIN');
                 const totalUserCount = userList.length;
                 const totalPool = totalUserCount * 100;
+
+                // Combine and de-duplicate
+                const picksMap = new Map();
+                [...picksArchive, ...picksMain].forEach(p => {
+                    picksMap.set(`${p.userName}|${p.matchId}`, p);
+                });
+                const allPicks = Array.from(picksMap.values());
 
                 const matchPicks = allPicks.filter(p => p.matchId === matchId && p.userName !== 'ADMIN');
                 const correctPicks = matchPicks.filter(p => p.team === winner);
@@ -3038,11 +3081,10 @@
                 allPicks.forEach(p => {
                     if (p.matchId === matchId) {
                         if (p.userName === 'ADMIN') {
-                            p.points = 0; // Admin always gets 0
+                            p.points = 0;
                         } else if (isNoResult) {
-                            p.points = 0; // No points for No Result
+                            p.points = 0;
                         } else {
-                            // Net points = Reward (if winner) - Entry Fee (100)
                             const net = (p.team === winner ? pointsPerWinner : 0) - 100;
                             p.points = Number(net.toFixed(2));
                         }
@@ -3050,62 +3092,46 @@
                     }
                 });
 
-                // Those who didn't predict (missed) (excluding ADMIN)
+                // Those who missed
                 userList.forEach(u => {
                     if (!usersWithEntry.has(u)) {
                         allPicks.push({
-                            userName: u,
-                            matchId: matchId,
-                            team: "Missed",
-                            points: 0, // Default to 0, if result exists handled below
+                            userName: u, matchId, team: "Missed",
+                            points: isNoResult ? 0 : -100,
                             timestamp: new Date().toISOString()
                         });
-                        // If it's not a 'No Result' and they missed, they lose 100
-                        if (!isNoResult) {
-                            allPicks[allPicks.length - 1].points = Number((-100).toFixed(2));
-                        }
                     }
                 });
 
-                // 1. Fetch current archive
-                const archiveRes = await fetch(ARCHIVE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const archiveDataBin = await archiveRes.json();
-                let { picks: archivePicks } = getNormalizedData(archiveDataBin.record || {});
+                const archivedPicksForMatch = allPicks.filter(p => p.matchId === matchId);
+                const otherArchivePicks = picksArchive.filter(p => p.matchId !== matchId);
+                const otherMainPicks = picksMain.filter(p => p.matchId !== matchId);
 
-                // 2. Identify picks to archive (those for this match)
-                const picksToArchive = allPicks.filter(p => p.matchId === matchId);
-                const remainingMainPicks = allPicks.filter(p => p.matchId !== matchId);
+                const finalArchive = [...otherArchivePicks, ...archivedPicksForMatch];
+                const finalMain = otherMainPicks;
 
-                // 3. Update Archive Bin
-                const newArchivePicks = [...archivePicks, ...picksToArchive];
                 const saveArchive = await fetch(ARCHIVE_BIN_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: newArchivePicks })
+                    body: JSON.stringify({ picks: finalArchive })
                 });
+                if (!saveArchive.ok) throw new Error('Archive sync failed');
 
-                if (!saveArchive.ok) {
-                    alert('Failed to update archive. Rewards not saved to main bin.');
-                    return;
-                }
-
-                // 4. Update Main Bin (Remove archived picks)
                 const saveMain = await fetch(JSONBIN_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: remainingMainPicks, users: users })
+                    body: JSON.stringify({ picks: finalMain, users: users })
                 });
+                if (!saveMain.ok) throw new Error('Main sync failed');
 
-                if (saveMain.ok) {
-                    globalAllPicks = [...newArchivePicks, ...remainingMainPicks];
-                    renderAdminView();
-                    alert(`Rewards distributed & picks archived! Pool: ${totalPool}, Correct: ${correctPicks.length}, Points/Winner: ${pointsPerWinner.toFixed(2)}`);
-                } else {
-                    alert('Failed to update main bin after archiving. Data might be inconsistent!');
-                }
+                globalAllPicks = [...finalArchive, ...finalMain];
+                precalculateStats();
+                renderAdminView();
+                alert(`Rewards distributed & archived! Winners: ${correctPicks.length}, Pts/Winner: ${pointsPerWinner.toFixed(2)}`);
+
             } catch (e) {
                 console.error(e);
-                alert('Error rewarding winners and archiving.');
+                alert(`Error: ${e.message}`);
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
