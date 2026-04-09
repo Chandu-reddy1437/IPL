@@ -19,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -392,9 +393,9 @@
             <h1 class="text-lg font-bold tracking-tight">Predictor</h1>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="forceSync()" id="syncBtn" class="p-2 rounded-xl bg-brand-overlay/20 hover:bg-brand-overlay/40 text-brand-text/70 hover:text-brand-accent transition-all active:scale-90 relative group" title="Force Sync Data">
+            <button onclick="refreshData()" id="syncBtn" class="p-2 rounded-xl bg-brand-overlay/20 hover:bg-brand-overlay/40 text-brand-text/70 hover:text-brand-accent transition-all active:scale-90 relative group" title="Refresh Data">
                 <span class="material-symbols-outlined text-xl">sync</span>
-                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-brand-overlay z-50">Force Sync</div>
+                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-brand-overlay z-50">Refresh Data</div>
             </button>
             <button id="themeToggle" onclick="toggleTheme()" class="p-2 sm:p-3 rounded-2xl bg-brand-overlay/20 hover:bg-brand-overlay/40 text-brand-accent transition-all active:scale-95 shadow-lg border border-brand-overlay/50">
                 <span class="material-symbols-outlined text-xl sm:text-2xl" id="themeIcon">dark_mode</span>
@@ -885,11 +886,7 @@
                 <div class="flex justify-between items-center mb-1">
                     <h2 class="text-2xl font-bold">Set Winner</h2>
                     <div class="flex items-center gap-2">
-                        <button id="archiveBtn" onclick="archiveHistoricalPicks()"
-                            class="bg-brand-muted hover:bg-brand-overlay border border-brand-overlay text-brand-primary px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
-                            <span class="material-symbols-outlined text-sm">archive</span>
-                            Archive History
-                        </button>
+
                         <button onclick="logoutAdmin()"
                             class="text-xs font-bold text-red-400 uppercase tracking-widest bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20">Logout</button>
                     </div>
@@ -1281,7 +1278,8 @@
     <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
     <script>
         // ─── GLOBALS ──────────────────────────
-        let currentUser = localStorage.getItem('ipl_username') || null;
+        let rawUser = localStorage.getItem('ipl_username') || null;
+        let currentUser = rawUser ? rawUser.toUpperCase() : null;
         const NICE_USERS = ['GOPI', 'CHANDU', 'DP', 'SRINI', 'DHANRAJ', 'ABHIJIT', 'SHRAVAN', 'TEJA', 'KISHORE', 'SANTU', 'NEELIMA', 'GOLLA', 'MAMATHA', 'NANDA', 'RAJUM'];
         const NICE_USERS_SET = new Set(NICE_USERS);
 
@@ -1336,17 +1334,9 @@
         let currentSort = { field: 'points', direction: 'desc' };
         let resultsFilter = 'all'; // 'all', 'correct', 'wrong'
 
-        const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
-        const SCHEDULE_BIN_URL = 'https://api.jsonbin.io/v3/b/69b89f95aa77b81da9eefef2';
-        const ARCHIVE_BIN_URLS = [
-            'https://api.jsonbin.io/v3/b/69cfb0ec36566621a876c870', // Primary Archive
-            'https://api.jsonbin.io/v3/b/69d72e5f856a682189136054', // Overflow 1
-            'https://api.jsonbin.io/v3/b/69d72e77856a682189136094', // Overflow 2
-            'https://api.jsonbin.io/v3/b/69d72ea436566621a892ab8c', // Overflow 3
-            'https://api.jsonbin.io/v3/b/69d72ec6aaba882197dba32d'  // Overflow 4
-        ];
-        const LEADERBOARD_CACHE_BIN_URL = 'https://api.jsonbin.io/v3/b/69d72ed336566621a892ac37';
-        const MASTER_KEY = '$2a$10$aYtY9fT6R2RECjwsJcmDKeEUlKPfuC8NgeDISmj/j8ruTZLHyoOHO';
+        const SUPABASE_URL = 'https://xsoyahvduzziktiwilqd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb3lhaHZkdXp6aWt0aXdpbHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTIxNzEsImV4cCI6MjA5MTI4ODE3MX0.P33msjQx2qkoZaimNnWzIPbxIlmpZuxsLPB7BhqdxJk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function getNormalizedData(record) {
             const rawPicks = record.picks || [];
@@ -1399,73 +1389,6 @@
         /**
          * Enhanced fetch that handles local caching and 429 rate limit retries.
          */
-        async function smartFetch(url, options = {}, cacheTtl = 300000) {
-            const cacheKey = `ipl_cache_${url}`;
-            const now = Date.now();
-
-            // 1. Check Cache (Only for GET requests)
-            // Skip cache if cacheTtl is explicitly 0
-            if (cacheTtl > 0 && (!options.method || options.method === 'GET')) {
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    try {
-                        const { data, timestamp } = JSON.parse(cached);
-                        if (now - timestamp < cacheTtl) {
-                            return { 
-                                ok: true, 
-                                status: 200,
-                                fromCache: true,
-                                json: async () => data,
-                                text: async () => JSON.stringify(data)
-                            };
-                        }
-                    } catch (e) { localStorage.removeItem(cacheKey); }
-                }
-            }
-
-            // 2. Perform Fetch with Retry Logic
-            let attempts = 0;
-            const maxAttempts = 3;
-            const initialDelay = 2000;
-
-            while (attempts < maxAttempts) {
-                try {
-                    const res = await fetch(url, options);
-                    
-                    if (res.status === 429) {
-                        attempts++;
-                        const delay = initialDelay * Math.pow(2, attempts - 1) + (Math.random() * 1000);
-                        console.warn(`Rate limited (429) for ${url}. Retrying in ${Math.round(delay)}ms...`);
-                        await new Promise(r => setTimeout(r, delay));
-                        continue;
-                    }
-
-                    // 3. Clear Cache on Mutation
-                    if (options.method && ['PUT', 'POST', 'DELETE'].includes(options.method.toUpperCase())) {
-                        localStorage.removeItem(cacheKey);
-                    }
-
-                    if (res.ok && (!options.method || options.method === 'GET')) {
-                        const data = await res.json();
-                        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: now }));
-                        // Return custom response-like object to keep existing .json() calls working
-                        return { 
-                            ok: true, 
-                            status: res.status,
-                            fromCache: false,
-                            json: async () => data,
-                            text: async () => JSON.stringify(data)
-                        };
-                    }
-
-                    return res; // Return original response for non-GET or non-OK
-                } catch (err) {
-                    attempts++;
-                    if (attempts >= maxAttempts) throw err;
-                    await new Promise(r => setTimeout(r, initialDelay * attempts));
-                }
-            }
-        }
 
         const TEAM_ABBR = {
             'Mumbai Indians': 'MI', 'Chennai Super Kings': 'CSK', 'Kolkata Knight Riders': 'KKR',
@@ -1514,24 +1437,20 @@
         }
 
         // ─── INIT ──────────────────────────
-        async function forceSync() {
+        async function refreshData() {
             const btn = document.getElementById('syncBtn');
-            btn.querySelector('span').classList.add('animate-spin');
+            const icon = btn.querySelector('span');
+            icon.classList.add('animate-spin');
             btn.disabled = true;
             
             try {
-                // Clear all ipl_cache_ keys
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('ipl_cache_')) {
-                        localStorage.removeItem(key);
-                        i--; // Adjust index after removal
-                    }
-                }
+                // Clear any legacy ipl_cache_ keys
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('ipl_cache_')) localStorage.removeItem(key);
+                });
                 
-                // Re-fetch everything with cache disabled
-                await fetchLeaderboardCache(0);
-                await fetchSchedule(0);
+                // Re-fetch everything (0 TTL ensures fresh Supabase/Local fetch)
+                await fetchSchedule(); 
                 await fetchMyPicks(0);
                 await fetchH2H();
                 
@@ -1539,12 +1458,14 @@
                 if (currentUser === 'ADMIN') renderAdminView();
                 renderLeaderboard();
                 
-            } catch (e) { console.error(e); }
-            finally {
+                console.log('App data refreshed from Supabase.');
+            } catch (e) { 
+                console.error('Refresh failed:', e); 
+            } finally {
                 setTimeout(() => {
-                    btn.querySelector('span').classList.remove('animate-spin');
+                    icon.classList.remove('animate-spin');
                     btn.disabled = false;
-                }, 1000);
+                }, 800);
             }
         }
 
@@ -1556,8 +1477,8 @@
                 if (currentUser === 'ADMIN') switchView('admin');
             }
 
-            // Fast path: Load leaderboard from cache first
-            await fetchLeaderboardCache();
+            // Initial data loads
+            await fetchSchedule();
 
             // Stagger remaining loads to avoid rate limits (429)
             setTimeout(async () => {
@@ -1586,76 +1507,49 @@
         // ─── DATA FETCHING ──────────────────────────
         async function fetchSchedule(ttl = 300000) {
             try {
-                const res = await smartFetch(SCHEDULE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }, ttl);
+                // Fetch schedule from local JSON for now, can be moved to Supabase DB later
+                const res = await fetch('./schedule.json');
                 const data = await res.json();
-                scheduleData = (data.record.matches || []).sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+                scheduleData = (data.matches || []).sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
                 precalculateStats();
             } catch (err) { console.error(err); }
         }
 
-        async function fetchLeaderboardCache(ttl = 300000) {
-            try {
-                const res = await smartFetch(LEADERBOARD_CACHE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }, ttl);
-                if (!res || !res.ok) return;
-                const data = await res.json();
-                if (data.record && data.record.leaderboardData) {
-                    leaderboardData = data.record.leaderboardData;
-                    niceLeaderboardData = data.record.niceLeaderboardData || [];
-                    renderLeaderboard();
-                    renderLeaderboard(true);
-                    console.log('Leaderboard loaded from cache.');
-                    
-                    // Update match counts if stored
-                    if (data.record.matchesCount !== undefined) {
-                        document.getElementById('leaderboardMatchesCount').innerHTML = `Completed<br>Matches: ${data.record.matchesCount}`;
-                        document.getElementById('niceLeaderboardMatchesCount').innerHTML = `Completed<br>Matches: ${data.record.matchesCount}`;
-                    }
-                }
-            } catch (err) {
-                console.warn('Leaderboard cache fetch failed:', err);
-            }
-        }
 
         async function fetchMyPicks(ttl = 300000) {
             try {
-                // 1. Fetch Main Bin (Fastest)
-                const resMain = await smartFetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }, ttl);
-                const dataMain = await resMain.json();
-                const { picks: picksMain, users } = getNormalizedData(dataMain.record);
-
-                // 2. Fetch Archive bins with small sequential delays to avoid rate limit bursts
-                let allArchivePicks = [];
-                for (const url of ARCHIVE_BIN_URLS) {
-                    try {
-                        const res = await smartFetch(url, { headers: { 'X-Master-Key': MASTER_KEY } }, ttl);
-                        if (res.ok) {
-                            const data = await res.json();
-                            const { picks } = getNormalizedData(data.record || {});
-                            allArchivePicks = [...allArchivePicks, ...picks];
-                        }
-                        // Minor sleep between requests if not from cache
-                        if (!res.fromCache) await new Promise(r => setTimeout(r, 300));
-                    } catch (e) { console.warn(`Failed to fetch archive ${url}`, e); }
+                // 1. Fetch Users
+                const { data: usersData, error: usersErr } = await supabaseClient.from('users').select('*');
+                if (!usersErr && usersData) {
+                    const normalizedUsers = {};
+                    usersData.forEach(u => {
+                        normalizedUsers[u.username.toUpperCase()] = { pin: u.pin, name: u.name };
+                    });
+                    globalUsers = normalizedUsers;
                 }
 
-                // Combine and de-duplicate picks (preferring main bin)
-                const picksMap = new Map();
-                [...allArchivePicks, ...picksMain].forEach(p => {
-                    const key = `${p.userName}|${p.matchId}`;
-                    picksMap.set(key, p);
-                });
-                globalAllPicks = Array.from(picksMap.values());
-                globalUsers = users; 
+                // 2. Fetch Picks
+                const { data: picksData, error: picksErr } = await supabaseClient.from('picks').select(`*, users!inner(username)`);
+                if (picksErr) throw picksErr;
+
+                // Format to match existing JS expectations
+                globalAllPicks = picksData.map(p => ({
+                    matchId: p.match_id,
+                    team: p.team_picked,
+                    userName: p.users.username,
+                    points: parseFloat(p.points || 0),
+                    timestamp: p.created_at
+                }));
                 globalAllPlayers = new Set(globalAllPicks.map(p => p.userName));
 
                 if (currentUser) {
-                    const normalizedCurrent = currentUser.toUpperCase();
-                    myPicks = globalAllPicks.filter(p => p.userName === normalizedCurrent);
-                    document.getElementById('userChip').textContent = normalizedCurrent;
+                    myPicks = globalAllPicks.filter(p => p.userName === currentUser);
+                    const userChip = document.getElementById('userChip');
+                    if (userChip) userChip.textContent = currentUser;
                     updateNiceNavVisibility();
                 }
                 precalculateStats();
-            } catch (err) { console.error('Error fetching picks:', err); }
+            } catch (err) { console.error('Error fetching picks from Supabase:', err); }
         }
 
         function updateNiceNavVisibility() {
@@ -1670,7 +1564,7 @@
 
         async function fetchH2H() {
             try {
-                const res = await smartFetch('./h2h.json');
+                const res = await fetch('./h2h.json');
                 const data = await res.json();
                 h2hData = data.records || {};
             } catch (err) { console.error(err); }
@@ -1806,47 +1700,40 @@
             loginBtn.disabled = true;
 
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                const { picks: allPicks, users } = getNormalizedData(data.record);
+                const { data: user, error } = await supabaseClient.from('users').select('*').eq('username', name).single();
 
-                if (users[name]) {
-                    // Existing user validation
-                    if (users[name].pin !== pin) {
-                        alert('Incorrect PIN for this username!');
-                        loginBtn.textContent = originalBtnText;
-                        loginBtn.disabled = false;
-                        return;
-                    }
-
-                    // If validated and Pin was 0000, trigger Change PIN Modal
-                    if (pin === '0000') {
-                        pendingUser = { name, originalPicks: allPicks };
-                        document.getElementById('loginModal').classList.remove('active');
-                        document.getElementById('changePinModal').classList.add('active');
-                        document.getElementById('newPinInput').focus();
-                        return;
-                    }
-                } else {
+                if (error || !user) {
                     alert(`User "${name}" is not registered. Contact admin (Gopinadh or Chandrakanth) to get registered and start playing.`);
                     loginBtn.textContent = originalBtnText;
                     loginBtn.disabled = false;
                     return;
                 }
 
+                if (user.pin !== pin) {
+                    alert('Incorrect PIN for this username!');
+                    loginBtn.textContent = originalBtnText;
+                    loginBtn.disabled = false;
+                    return;
+                }
+
+                if (pin === '0000') {
+                    pendingUser = { name };
+                    document.getElementById('loginModal').classList.remove('active');
+                    document.getElementById('changePinModal').classList.add('active');
+                    document.getElementById('newPinInput').focus();
+                    return;
+                }
+
                 currentUser = name;
                 localStorage.setItem('ipl_username', name);
-                localStorage.setItem('ipl_pin', pin); // Store locally for session persistence
+                localStorage.setItem('ipl_pin', pin); 
                 document.getElementById('userChip').textContent = name;
                 document.getElementById('loginModal').classList.remove('active');
 
-                globalUsers = users;
-                globalAllPicks = allPicks;
-                myPicks = allPicks.filter(p => p.userName === currentUser);
-
-                updateNiceNavVisibility();
-
-                if (name === 'ADMIN') switchView('admin');
+                // Reload data securely
+                await fetchMyPicks();
+                
+                if (user.role === 'admin' || name === 'ADMIN') switchView('admin');
                 else {
                     switchView('upcoming');
                     renderUpcomingMatches();
@@ -1875,19 +1762,10 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                const { picks: allPicks, users } = getNormalizedData(data.record);
-
                 if (pendingUser) {
-                    users[pendingUser.name].pin = p1;
-                    const updateRes = await fetch(JSONBIN_URL, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                        body: JSON.stringify({ picks: allPicks, users: users })
-                    });
+                    const { error } = await supabaseClient.from('users').update({ pin: p1 }).eq('username', pendingUser.name);
 
-                    if (updateRes.ok) {
+                    if (!error) {
                         alert('Password updated successfully! Please login with your new PIN.');
                         document.getElementById('changePinModal').classList.remove('active');
                         // Return to login with name auto-populated
@@ -2713,63 +2591,35 @@
                 }
             }
 
-            const MAX_RETRIES = 3;
-            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-                try {
-                    // 1. Read latest data
-                    const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                    const currentData = await res.json();
-                    let { picks: allPicks, users } = getNormalizedData(currentData.record);
-
-                    // 2. Add/update our pick
-                    allPicks = allPicks.filter(p => !(p.userName === currentUser && p.matchId === matchId));
-                    allPicks.push({ userName: currentUser, matchId, team, frozen: true, timestamp: new Date().toISOString() });
-
-                    // 3. Write back
-                    const saveRes = await fetch(JSONBIN_URL, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                        body: JSON.stringify({ picks: allPicks, users: users })
-                    });
-
-                    if (!saveRes.ok) {
-                        const errBody = await saveRes.text();
-                        console.error(`Failed to submit pick. Status: ${saveRes.status}, Body: ${errBody}`);
-                        alert(`Failed to submit pick: ${saveRes.status} ${errBody}`);
-                        return;
-                    }
-
-                    // 4. Verify: re-read and confirm our pick exists
-                    const verifyRes = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                    const verifyData = await verifyRes.json();
-                    const { picks: verifiedPicks, users: verifiedUsers } = getNormalizedData(verifyData.record);
-                    const ourPick = verifiedPicks.find(p => p.userName === currentUser && p.matchId === matchId && p.team === team);
-
-                    if (ourPick) {
-                        // 5. Pick confirmed — reuse verified data for local state (no extra fetch needed)
-                        globalAllPicks = verifiedPicks;
-                        globalUsers = verifiedUsers;
-                        globalAllPlayers = new Set(verifiedPicks.map(p => p.userName));
-                        myPicks = verifiedPicks.filter(p => p.userName === currentUser);
-                        precalculateStats();
-                        renderUpcomingMatches();
-                        console.log(`Pick saved & verified on attempt ${attempt}`);
-                        return;
-                    }
-
-                    // 6. Pick was overwritten by concurrent write — retry
-                    console.warn(`Pick verification failed (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
-                } catch (e) {
-                    console.error(`Pick submission error (attempt ${attempt}):`, e);
-                    if (attempt === MAX_RETRIES) {
-                        alert('Network error. Please try again.');
-                        return;
-                    }
+            try {
+                // Read from Supabase (Get internal UUID)
+                const { data: userRecord, error: uErr } = await supabaseClient.from('users').select('id').eq('username', currentUser).single();
+                if (uErr || !userRecord) {
+                    alert('User record not found in database.');
+                    return;
                 }
-            }
 
-            // All retries exhausted
-            alert('Your prediction could not be saved after multiple attempts. Please try again.');
+                // Upsert Pick
+                const { error: pickErr } = await supabaseClient.from('picks').upsert({
+                    user_id: userRecord.id,
+                    match_id: matchId, 
+                    team_picked: team
+                }, { onConflict: 'user_id, match_id' });
+
+                if (pickErr) {
+                    console.error('Failed to submit pick:', pickErr);
+                    alert(`Failed to submit pick: ${pickErr.message}`);
+                    return;
+                }
+
+                // Success, fetch picks again
+                await fetchMyPicks();
+                renderUpcomingMatches();
+                console.log(`Pick saved to Supabase.`);
+            } catch (e) {
+                console.error(`Pick submission error:`, e);
+                alert('Database error. Please try again.');
+            }
         }
 
 
@@ -3089,106 +2939,6 @@
             }).join('');
         }
 
-        async function archiveHistoricalPicks() {
-            if (!confirm('This will move all historical picks (for completed and rewarded matches) from the main bin to the archives. Proceed?')) return;
-
-            const btn = document.getElementById('archiveBtn');
-            const originalText = btn.textContent;
-            btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Archiving...';
-            btn.disabled = true;
-
-            try {
-                // 1. Fetch latest Main data and ALL Archive bins
-                const archiveFetches = ARCHIVE_BIN_URLS.map(url => smartFetch(url, { headers: { 'X-Master-Key': MASTER_KEY } }, 0));
-                const [resMain, ...resArchives] = await Promise.all([
-                    smartFetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }, 0),
-                    ...archiveFetches
-                ]);
-                
-                const dataMain = await resMain.json();
-                const archivesData = await Promise.all(resArchives.map(async res => {
-                    if (res.ok) return await res.json();
-                    return { record: { picks: [] } };
-                }));
-
-                let { picks: allMainPicks, users } = getNormalizedData(dataMain.record);
-
-                // 2. Identify picks for matches that are already rewarded (have points)
-                const picksToArchive = allMainPicks.filter(p => p.points !== undefined).map(p => {
-                    const { timestamp, ...cleaned } = p;
-                    return cleaned;
-                });
-                const remainingMainPicks = allMainPicks.filter(p => p.points === undefined);
-
-                if (picksToArchive.length === 0) {
-                    alert('No picks found in the main bin that are ready for archiving.');
-                    return;
-                }
-
-                // 3. Find a bin with space
-                let targetBinIdx = -1;
-                let targetBinContent = null;
-                
-                for (let i = 0; i < archivesData.length; i++) {
-                    const binData = archivesData[i].record || { picks: [] };
-                    const currentPicks = binData.picks || [];
-                    const proposedContent = { picks: [...currentPicks, ...picksToArchive] };
-                    const proposedSize = JSON.stringify(proposedContent).length;
-                    
-                    if (proposedSize < 980000) { 
-                        targetBinIdx = i;
-                        targetBinContent = proposedContent;
-                        break;
-                    }
-                }
-
-                if (targetBinIdx === -1) {
-                    throw new Error('All archive bins are full! Please expand the bin list.');
-                }
-
-                // 4. Update Archive Bin
-                const saveArchive = await smartFetch(ARCHIVE_BIN_URLS[targetBinIdx], {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify(targetBinContent)
-                });
-
-                if (!saveArchive.ok) {
-                    const err = await saveArchive.text();
-                    alert(`Failed to update archive bin #${targetBinIdx+1}: ${saveArchive.status} ${err}`);
-                    return;
-                }
-
-                // 5. Update Main Bin
-                const saveMain = await smartFetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: remainingMainPicks, users: users })
-                });
-
-                if (saveMain.ok) {
-                    // Update global state correctly
-                    let mergedArchivePicks = [];
-                    for(let i=0; i<archivesData.length; i++) {
-                        let picks = (i === targetBinIdx) ? targetBinContent.picks : (archivesData[i].record.picks || []);
-                        mergedArchivePicks = [...mergedArchivePicks, ...picks];
-                    }
-                    globalAllPicks = [...mergedArchivePicks, ...remainingMainPicks];
-                    
-                    renderAdminView();
-                    alert(`Archived ${picksToArchive.length} picks successfully to bin #${targetBinIdx+1}!`);
-                } else {
-                    const err = await saveMain.text();
-                    alert(`Failed to update main bin: ${saveMain.status} ${err}.`);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error during archiving process: ' + err.message);
-            } finally {
-                btn.innerHTML = '<span class="material-symbols-outlined text-sm">archive</span> Archive History';
-                btn.disabled = false;
-            }
-        }
 
         async function saveWinner(matchIdx) {
             const select = document.getElementById(`winner-select-${matchIdx}`);
@@ -3202,35 +2952,17 @@
             btn.disabled = true;
 
             try {
-                const scheduleRes = await fetch(SCHEDULE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const scheduleDataBin = await scheduleRes.json();
-                const latestMatches = scheduleDataBin.record.matches;
-
-                const matchObj = latestMatches.find(m => m.id === targetMatchId);
-                if (matchObj) {
-                    matchObj.winner = winner;
-                } else {
-                    alert('Match not found on server.');
-                    return;
-                }
-
-                const saveSchedule = await smartFetch(SCHEDULE_BIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ matches: latestMatches })
-                });
-
-                if (saveSchedule.ok) {
-                    // Refresh local shadow Copy - sorting will happen next time we open admin view or fetch
-                    scheduleData = latestMatches.sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
-                    renderAdminView();
-                    alert(`Winner saved! Now you can distribute rewards.`);
-                } else {
-                    alert('Failed to save winner.');
-                }
+                // Update Supabase
+                const { error } = await supabaseClient.from('matches').update({ winner }).eq('id', targetMatchId);
+                if (error) throw error;
+                
+                // Update local memory
+                scheduleData[matchIdx].winner = winner;
+                renderAdminView();
+                alert(`Winner saved! Now you can distribute rewards.`);
             } catch (e) {
                 console.error(e);
-                alert('Error saving winner.');
+                alert('Error saving winner to Database.');
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -3248,139 +2980,64 @@
             btn.disabled = true;
 
             try {
-                // Fetch Main Bin and ALL Archive bins (Bypass Cache for Admin actions)
-                const archiveFetches = ARCHIVE_BIN_URLS.map(url => smartFetch(url, { headers: { 'X-Master-Key': MASTER_KEY } }, 0));
-                const [resMain, ...resArchives] = await Promise.all([
-                    smartFetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } }, 0),
-                    ...archiveFetches
-                ]);
-                
-                const dataMain = await resMain.json();
-                const archivesData = await Promise.all(resArchives.map(async res => {
-                    if (res.ok) return await res.json();
-                    return { record: { picks: [] } };
-                }));
+                // Fetch all Picks for this Match
+                const { data: matchPicks, error: fetchErr } = await supabaseClient.from('picks').select('*, users!inner(*)').eq('match_id', match.id);
+                if (fetchErr) throw fetchErr;
 
-                const { picks: picksMain, users } = getNormalizedData(dataMain.record);
-                
-                // Combine all archive picks
-                let allArchivePicksMerged = [];
-                archivesData.forEach(data => {
-                    const { picks } = getNormalizedData(data.record || {});
-                    allArchivePicksMerged = [...allArchivePicksMerged, ...picks];
-                });
-
-                const matchId = match.id;
                 const winner = match.winner;
                 const isNoResult = (winner === 'No Result');
-                const userList = Object.keys(users).filter(u => u !== 'ADMIN');
+                
+                // Active Users = All non-admin users in DB
+                const { data: allUsers, error: usersErr } = await supabaseClient.from('users').select('*').neq('role', 'admin');
+                if (usersErr) throw usersErr;
+
+                const userList = allUsers.map(u => u.username);
                 const totalUserCount = userList.length;
                 const totalPool = totalUserCount * 100;
 
-                // Combine and de-duplicate (for calculation purposes)
-                const picksMap = new Map();
-                [...allArchivePicksMerged, ...picksMain].forEach(p => {
-                    picksMap.set(`${p.userName}|${p.matchId}`, p);
-                });
-                const allPicksCombined = Array.from(picksMap.values());
-
-                const matchPicks = allPicksCombined.filter(p => p.matchId === matchId && p.userName !== 'ADMIN');
-                const correctPicks = matchPicks.filter(p => p.team === winner);
+                const correctPicks = matchPicks.filter(p => p.team_picked === winner);
                 const pointsPerWinner = (!isNoResult && correctPicks.length > 0) ? (totalPool / correctPicks.length) : 0;
 
-                const usersWithEntry = new Set();
-                allPicksCombined.forEach(p => {
-                    if (p.matchId === matchId) {
-                        if (p.userName === 'ADMIN') {
-                            p.points = 0;
-                        } else if (isNoResult) {
-                            p.points = 0;
-                        } else {
-                            const net = (p.team === winner ? pointsPerWinner : 0) - 100;
-                            p.points = Number(net.toFixed(2));
-                        }
-                        usersWithEntry.add(p.userName);
-                    }
-                });
+                const usersWithEntry = new Set(matchPicks.map(p => p.users.username));
 
-                userList.forEach(u => {
-                    if (!usersWithEntry.has(u)) {
-                        allPicksCombined.push({
-                            userName: u, matchId, team: "Missed",
-                            points: isNoResult ? 0 : -100,
-                            timestamp: new Date().toISOString()
+                // Prepare Pick updates and inserts
+                const upserts = [];
+
+                // 1. Process Existing Picks
+                for (let pick of matchPicks) {
+                    if (pick.users.role === 'admin' || pick.users.username === 'ADMIN') continue;
+                    let newPoints = 0;
+                    if (!isNoResult) {
+                        const net = (pick.team_picked === winner ? pointsPerWinner : 0) - 100;
+                        newPoints = Number(net.toFixed(2));
+                    }
+                    upserts.push({ id: pick.id, user_id: pick.user_id, match_id: match.id, team_picked: pick.team_picked, points: newPoints });
+                }
+
+                // 2. Process Missing Users (Missed match)
+                for (let user of allUsers) {
+                    if (!usersWithEntry.has(user.username)) {
+                        upserts.push({
+                            user_id: user.id,
+                            match_id: match.id,
+                            team_picked: "Missed",
+                            points: isNoResult ? 0 : -100
                         });
                     }
-                });
-
-                // Target match picks (cleaned for archive: No timestamp)
-                const archivedPicksForMatch = allPicksCombined.filter(p => p.matchId === matchId).map(p => {
-                    const { timestamp, ...cleaned } = p;
-                    return cleaned;
-                });
-                
-                const otherMainPicks = picksMain.filter(p => p.matchId !== matchId);
-
-                // SPILLOVER LOGIC: Find a bin for these picks
-                let targetBinIdx = -1;
-                let targetBinContent = null;
-                
-                for (let i = 0; i < archivesData.length; i++) {
-                    const binData = archivesData[i].record || { picks: [] };
-                    const currentPicks = binData.picks || [];
-                    const filteredCurrent = currentPicks.filter(p => p.matchId !== matchId);
-                    const proposedContent = { picks: [...filteredCurrent, ...archivedPicksForMatch] };
-                    const proposedSize = JSON.stringify(proposedContent).length;
-                    
-                    if (proposedSize < 980000) { 
-                        targetBinIdx = i;
-                        targetBinContent = proposedContent;
-                        break;
-                    }
                 }
 
-                if (targetBinIdx === -1) {
-                    throw new Error('All archive bins are full! Please expand the multi-archive list in the code.');
+                // Database Transaction
+                if (upserts.length > 0) {
+                    const { error: upsertErr } = await supabaseClient.from('picks').upsert(upserts, { onConflict: 'user_id, match_id' });
+                    if (upsertErr) throw upsertErr;
                 }
 
-                // SAVE ARCHIVE
-                const saveArchive = await smartFetch(ARCHIVE_BIN_URLS[targetBinIdx], {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify(targetBinContent)
-                });
-                if (!saveArchive.ok) throw new Error(`Archive bin #${targetBinIdx+1} sync failed`);
-
-                // SAVE MAIN
-                const saveMain = await smartFetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: otherMainPicks, users: users })
-                });
-                if (!saveMain.ok) throw new Error('Main bin sync failed');
-
-                // UPDATE CACHE
-                globalAllPicks = allPicksCombined;
-                precalculateStats();
+                // Update Local UI
+                await fetchMyPicks(0); // refresh fully
                 renderLeaderboard();
                 renderLeaderboard(true);
-
-                const completedCount = scheduleData.filter(m => m.winner !== null && m.winner !== 'No Result').length;
-                const cacheData = {
-                    leaderboardData: leaderboardData,
-                    niceLeaderboardData: niceLeaderboardData,
-                    matchesCount: completedCount,
-                    updatedAt: new Date().toISOString()
-                };
-
-                await smartFetch(LEADERBOARD_CACHE_BIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify(cacheData)
-                });
-
                 renderAdminView();
-                alert(`Rewards distributed & archived to bin #${targetBinIdx+1}! Winners: ${correctPicks.length}, Pts/Winner: ${pointsPerWinner.toFixed(2)}`);
+                alert(`Rewards distributed universally! Winners: ${correctPicks.length}, Pts/Winner: ${pointsPerWinner.toFixed(2)}`);
 
             } catch (e) {
                 console.error(e);
@@ -3457,26 +3114,21 @@
             if (globalUsers[uName]) { alert('User already exists'); return; }
 
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                const { picks: allPicks, users } = getNormalizedData(data.record);
-
-                users[uName] = { pin: "0000", name: dName };
-
-                const updateRes = await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: allPicks, users: users })
+                const { error } = await supabaseClient.from('users').insert({
+                    username: uName,
+                    name: dName,
+                    pin: '0000',
+                    role: 'player'
                 });
 
-                if (updateRes.ok) {
-                    globalUsers = users;
+                if (!error) {
+                    globalUsers[uName] = { pin: "0000", name: dName };
                     userNameInput.value = '';
                     displayNameInput.value = '';
                     renderAdminUsersView();
                     alert(`User ${uName} added with display name "${dName}" and PIN 0000`);
                 } else {
-                    alert('Failed to add user');
+                    alert(`Failed to add user: ${error.message}`);
                 }
             } catch (e) {
                 console.error(e);
@@ -3488,24 +3140,14 @@
             if (!confirm(`Reset PIN for ${userName} to 0000?`)) return;
 
             try {
-                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                const { picks: allPicks, users } = getNormalizedData(data.record);
+                const { error } = await supabaseClient.from('users').update({ pin: '0000' }).eq('username', userName);
 
-                if (users[userName]) {
-                    users[userName].pin = "0000";
-                }
-
-                const updateRes = await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ picks: allPicks, users: users })
-                });
-
-                if (updateRes.ok) {
-                    globalUsers = users;
+                if (!error) {
+                    if (globalUsers[userName]) globalUsers[userName].pin = "0000";
                     renderAdminUsersView();
                     alert(`PIN reset for ${userName}`);
+                } else {
+                    alert(`Failed to reset PIN: ${error.message}`);
                 }
             } catch (e) { console.error(e); }
         }
@@ -3857,33 +3499,31 @@
             };
 
             try {
-                const res = await fetch(SCHEDULE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
-                const data = await res.json();
-                let matches = data.record.matches || [];
+                const { error } = await supabaseClient.from('matches').insert({
+                    id: matchId,
+                    name: `${teamA} vs ${teamB}`,
+                    venue: stadium,
+                    start_time_iso: startTimeISO,
+                    date: customDateLabel,
+                    team1_name: teamA,
+                    team2_name: teamB
+                });
 
-                if (matches.some(m => m.id === matchId)) {
-                    alert('A match with this ID already exists!');
+                if (error) {
+                    if (error.code === '23505') alert('A match with this ID already exists!');
+                    else alert(`Failed to add match: ${error.message}`);
                     return;
                 }
 
-                matches.push(newMatch);
-                // Sort by date and time
-                matches.sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
-
-                const updateRes = await fetch(SCHEDULE_BIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify({ matches: matches })
+                alert('Match added successfully to schedule!');
+                // We should push this locally to avoid a full refetch right away
+                scheduleData.push({
+                    id: matchId, teamA, teamB, venue: stadium, startTimeISO, dateLabel: customDateLabel, winner: null
                 });
-
-                if (updateRes.ok) {
-                    alert('Match added successfully to schedule!');
-                    scheduleData = matches;
-                    renderUpcomingMatches();
-                    switchView('admin'); // Go to Set Winner page
-                } else {
-                    alert('Failed to save match to schedule.');
-                }
+                scheduleData.sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+                
+                renderUpcomingMatches();
+                switchView('admin'); // Go to Set Winner page
             } catch (err) {
                 console.error(err);
                 alert('Connection error.');

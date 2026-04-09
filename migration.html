@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Predictor - Database Migration</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-4">Migrate Data to Supabase</h1>
+        <p class="mb-4">This script will download your data from JSONBin and upload it to Supabase.</p>
+        
+        <button id="startBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Start Migration</button>
+        
+        <div id="log" class="mt-6 p-4 bg-gray-900 text-green-400 font-mono text-sm h-64 overflow-y-auto rounded hidden">
+            <!-- Logs will appear here -->
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xsoyahvduzziktiwilqd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb3lhaHZkdXp6aWt0aXdpbHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MTIxNzEsImV4cCI6MjA5MTI4ODE3MX0.P33msjQx2qkoZaimNnWzIPbxIlmpZuxsLPB7BhqdxJk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69b51614b7ec241ddc693348';
+        const MASTER_KEY = '$2a$10$aYtY9fT6R2RECjwsJcmDKeEUlKPfuC8NgeDISmj/j8ruTZLHyoOHO';
+
+        const ARCHIVE_BINS = [
+            'https://api.jsonbin.io/v3/b/69cfb0ec36566621a876c870',
+            'https://api.jsonbin.io/v3/b/69d72e5f856a682189136054',
+            'https://api.jsonbin.io/v3/b/69d72e77856a682189136094',
+            'https://api.jsonbin.io/v3/b/69d72ea436566621a892ab8c',
+            'https://api.jsonbin.io/v3/b/69d72ec6aaba882197dba32d'
+        ];
+
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.classList.remove('hidden');
+            el.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+            console.log(msg);
+        }
+
+        async function startMigration() {
+            document.getElementById('startBtn').disabled = true;
+            log('Starting migration...');
+
+            try {
+                // 1. Fetch JSONBin
+                log('Fetching primary JSONBin...');
+                const res = await fetch(JSONBIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const mainData = await res.json();
+                
+                let allPicks = mainData.record.picks || [];
+                let allUsers = mainData.record.users || {};
+
+                // 2. Insert Users
+                const userArray = Object.keys(allUsers).map(uname => ({
+                    username: uname.toUpperCase(),
+                    name: allUsers[uname].name || uname,
+                    pin: String(allUsers[uname].pin || allUsers[uname]),
+                    role: uname.toUpperCase() === 'ADMIN' ? 'admin' : 'player'
+                }));
+
+                log(`Found ${userArray.length} users. Upserting to Supabase...`);
+                // Note: user insertion on conflict updates PIN
+                const { data: dbUsers, error: uErr } = await supabaseClient.from('users').upsert(userArray, { onConflict: 'username' }).select();
+                if (uErr) throw uErr;
+
+                log('Users migrated successfully!');
+
+                // 3. Gather Picks (From main & archives)
+                log('Fetching archive bins for picks...');
+                for(const bin of ARCHIVE_BINS) {
+                    try {
+                        const ar = await fetch(bin, { headers: { 'X-Master-Key': MASTER_KEY } });
+                        if(ar.ok) {
+                            const d = await ar.json();
+                            allPicks = [...allPicks, ...(d.record.picks || [])];
+                        }
+                    } catch(e) { log(`Failed to fetch archive: ${bin}`); }
+                }
+
+                // De-duplicate picks (prefer recent)
+                const dedup = {};
+                for(const p of allPicks) {
+                    const k = `${p.userName?.toUpperCase()}|${p.matchId}`;
+                    dedup[k] = p; // Keep latest logically
+                }
+                const uniquePicks = Object.values(dedup);
+                log(`Found ${uniquePicks.length} unique picks. Formatting...`);
+
+                // 4. Map user_ids for picks
+                const userMap = {};
+                dbUsers.forEach(u => { userMap[u.username] = u.id; });
+
+                const pickInserts = uniquePicks.map(p => {
+                    const uid = userMap[p.userName?.toUpperCase()];
+                    if(!uid) return null;
+                    return {
+                        user_id: uid,
+                        match_id: p.matchId,
+                        team_picked: p.team,
+                        points: parseFloat(p.points) || 0
+                        // timestamp: p.timestamp ? new Date(p.timestamp).toISOString() : new Date().toISOString()
+                    };
+                }).filter(p => p !== null);
+
+                log('Warning: Before inserting picks, ensure the Matches table is populated! Inserting picks in chunks of 500...');
+
+                // We must populate matches first from schedule.json or JSONBin
+                log('Loading schedule from JSONBin to bypass local CORS limitations...');
+                const SCHEDULE_BIN_URL = 'https://api.jsonbin.io/v3/b/69b89f95aa77b81da9eefef2';
+                const schedRes = await fetch(SCHEDULE_BIN_URL, { headers: { 'X-Master-Key': MASTER_KEY } });
+                const schedData = await schedRes.json();
+                
+                const matchesInserts = schedData.record.matches.map(m => ({
+                    id: m.id,
+                    name: `${m.teamA} vs ${m.teamB}`,
+                    date: m.dateLabel,
+                    start_time_iso: m.startTimeISO,
+                    venue: m.venue,
+                    winner: m.winner,
+                    team1_name: m.teamA,
+                    team2_name: m.teamB
+                }));
+                
+                const { error: mErr } = await supabaseClient.from('matches').upsert(matchesInserts);
+                if (mErr) throw mErr;
+                log('Matches populated!');
+
+                // Insert Picks in Chunks
+                for (let i = 0; i < pickInserts.length; i += 500) {
+                    const chunk = pickInserts.slice(i, i + 500);
+                    const { error: pErr } = await supabaseClient.from('picks').upsert(chunk, { onConflict: 'user_id, match_id' });
+                    if (pErr) {
+                        log(`Error inserting chunk ${i}: ${pErr.message}`);
+                    } else {
+                        log(`Inserted picks ${i} to ${i + chunk.length}`);
+                    }
+                }
+
+                log('🎉 Migration completely finished! Your Supabase database is ready to go.');
+
+            } catch(e) {
+                log('ERROR: ' + e.message);
+                console.error(e);
+            }
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        document.getElementById('startBtn').addEventListener('click', startMigration);
+    </script>
+</body>
+</html>
