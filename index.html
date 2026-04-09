@@ -400,7 +400,7 @@
             <button id="themeToggle" onclick="toggleTheme()" class="p-2 sm:p-3 rounded-2xl bg-brand-overlay/20 hover:bg-brand-overlay/40 text-brand-accent transition-all active:scale-95 shadow-lg border border-brand-overlay/50">
                 <span class="material-symbols-outlined text-xl sm:text-2xl" id="themeIcon">dark_mode</span>
             </button>
-            <div id="userChipContainer" onclick="switchView('profile')" class="flex items-center gap-2 sm:gap-3 bg-brand-overlay/20 hover:bg-brand-overlay/40 px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl cursor-pointer transition-all border border-brand-overlay/50 group active:scale-95">
+            <div id="userChipContainer" onclick="switchView('results')" class="flex items-center gap-2 sm:gap-3 bg-brand-overlay/20 hover:bg-brand-overlay/40 px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl cursor-pointer transition-all border border-brand-overlay/50 group active:scale-95">
                 <span class="text-xs font-medium cursor-pointer themed-text" id="userChip"
                     onclick="promptLogin()">Guest</span>
                 <div class="w-9 h-9 rounded-full border-2 border-brand-accent/30 flex items-center justify-center overflow-hidden cursor-pointer themed-card"
@@ -1507,10 +1507,31 @@
         // ─── DATA FETCHING ──────────────────────────
         async function fetchSchedule(ttl = 300000) {
             try {
-                // Fetch schedule from local JSON for now, can be moved to Supabase DB later
+                // 1. Fetch static schedule fixtures
                 const res = await fetch('./schedule.json');
                 const data = await res.json();
-                scheduleData = (data.matches || []).sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+                const baseMatches = (data.matches || []).sort((a, b) => new Date(a.startTimeISO) - new Date(b.startTimeISO));
+
+                // 2. Fetch live winners from Supabase
+                try {
+                    const { data: dbMatches, error } = await supabaseClient.from('matches').select('id, winner');
+                    if (!error && dbMatches) {
+                        const winnerMap = {};
+                        dbMatches.forEach(m => {
+                            if (m.winner) winnerMap[m.id] = m.winner;
+                        });
+
+                        baseMatches.forEach(m => {
+                            if (winnerMap[m.id]) {
+                                m.winner = winnerMap[m.id];
+                            }
+                        });
+                    }
+                } catch (sbErr) {
+                    console.error('Supabase schedule sync failed:', sbErr);
+                }
+
+                scheduleData = baseMatches;
                 precalculateStats();
             } catch (err) { console.error(err); }
         }
