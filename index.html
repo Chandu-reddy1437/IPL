@@ -3033,7 +3033,16 @@
                         const net = (pick.team_picked === winner ? pointsPerWinner : 0) - 100;
                         newPoints = Number(net.toFixed(2));
                     }
-                    upserts.push({ id: pick.id, user_id: pick.user_id, match_id: match.id, team_picked: pick.team_picked, points: newPoints });
+                    
+                    const entry = { 
+                        user_id: pick.user_id, 
+                        match_id: match.id, 
+                        team_picked: pick.team_picked, 
+                        points: newPoints 
+                    };
+                    // Only include id if it exists (for updates)
+                    if (pick.id) entry.id = pick.id;
+                    upserts.push(entry);
                 }
 
                 // 2. Process Missing Users (Missed match)
