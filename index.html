@@ -3049,6 +3049,7 @@
                 for (let user of allUsers) {
                     if (!usersWithEntry.has(user.username)) {
                         upserts.push({
+                            id: crypto.randomUUID(), // Fallback: generate ID if DB default is missing
                             user_id: user.id,
                             match_id: match.id,
                             team_picked: "Missed",
